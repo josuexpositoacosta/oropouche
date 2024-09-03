@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="OropoucheApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+    <output_file path="D:\codigo\oropouche\oropouche\logs" is_save="true" />
+    <option name="MAIN_CLASS_NAME" value="com.oropouche.tasks.OropoucheApplication" />
+    <module name="tasks" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.oropouche.tasks.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
