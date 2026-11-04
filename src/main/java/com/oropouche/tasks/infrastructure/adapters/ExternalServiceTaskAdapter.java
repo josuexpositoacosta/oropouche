@@ -1,40 +1,70 @@
 package com.oropouche.tasks.infrastructure.adapters;
 
 import com.oropouche.tasks.domain.models.AddicionalTaskInfo;
-import com.oropouche.tasks.domain.ports.out.*;
+import com.oropouche.tasks.domain.ports.out.ExternalServiceTaskPort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 public class ExternalServiceTaskAdapter implements ExternalServiceTaskPort {
 
-   // https://jsonplaceholder.typicode.com/todos/
-    // https://jsonplaceholder.typicode.com/users/
     private final RestTemplate restTemplate;
+    private final String baseUrl;
 
-    public ExternalServiceTaskAdapter(){
-        restTemplate = new RestTemplate();
+    public ExternalServiceTaskAdapter(RestTemplate restTemplate, String baseUrl) {
+        this.restTemplate = restTemplate;
+        this.baseUrl = baseUrl.replaceAll("/+$", "");
     }
 
     @Override
     public AddicionalTaskInfo getAddicionalTaskInfo(Long taskId) {
-        String apiUrl = "https://jsonplaceholder.typicode.com/todos/" + taskId;
-        ResponseEntity<JsonPlaceHolderTodo> response = restTemplate.getForEntity(apiUrl, JsonPlaceHolderTodo.class);
-        JsonPlaceHolderTodo todo = response.getBody();
-        if (todo == null) {
-            return null;
+
+        if (taskId == null || taskId <= 0) {
+            throw new IllegalArgumentException("Task ID must be greater than zero");
         }
 
-        apiUrl = "https://jsonplaceholder.typicode.com/users/" + todo.getUserId();
-        ResponseEntity<JsonPlaceHolderUser> userResponse = restTemplate.getForEntity(apiUrl, JsonPlaceHolderUser.class);
-        JsonPlaceHolderUser user = userResponse.getBody();
-        if (user == null) {
-            return null;
-        }
+        try {
+            String todoUrl = baseUrl + "/todos/" + taskId;
 
-        return new AddicionalTaskInfo(user.getId(), user.getName(), user.getEmail());
+            ResponseEntity<JsonPlaceHolderTodo> todoResponse =
+                    restTemplate.getForEntity(todoUrl, JsonPlaceHolderTodo.class);
+
+            JsonPlaceHolderTodo todo = todoResponse.getBody();
+
+            if (todo == null || todo.getUserId() == null) {
+                return null;
+            }
+
+            String userUrl = baseUrl + "/users/" + todo.getUserId();
+
+            ResponseEntity<JsonPlaceHolderUser> userResponse =
+                    restTemplate.getForEntity(userUrl, JsonPlaceHolderUser.class);
+
+            JsonPlaceHolderUser user = userResponse.getBody();
+
+            if (user == null || user.getId() == null) {
+                return null;
+            }
+
+            return new AddicionalTaskInfo(
+                    user.getId(),
+                    user.getName(),
+                    user.getEmail()
+            );
+
+        } catch (HttpClientErrorException.NotFound exception) {
+            return null;
+        } catch (RestClientException exception) {
+            throw new ExternalTaskServiceException(
+                    "Error communicating with JSONPlaceholder",
+                    exception
+            );
+        }
     }
 
-    private static class JsonPlaceHolderTodo{
+    private static class JsonPlaceHolderTodo {
+
         private Long id;
         private Long userId;
 
@@ -55,8 +85,8 @@ public class ExternalServiceTaskAdapter implements ExternalServiceTaskPort {
         }
     }
 
+    private static class JsonPlaceHolderUser {
 
-    private static class JsonPlaceHolderUser{
         private Long id;
         private String name;
         private String email;
@@ -85,6 +115,4 @@ public class ExternalServiceTaskAdapter implements ExternalServiceTaskPort {
             this.email = email;
         }
     }
-
-
 }

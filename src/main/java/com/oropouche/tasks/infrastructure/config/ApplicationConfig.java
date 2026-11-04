@@ -1,5 +1,8 @@
 package com.oropouche.tasks.infrastructure.config;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.oropouche.tasks.application.services.TaskServices;
 import com.oropouche.tasks.application.usecases.*;
@@ -48,10 +51,17 @@ public class ApplicationConfig {
     public GetAddicionalTaskInfoUseCase getAddicionalTaskInfoUseCase(ExternalServiceTaskPort externalServicePort){
     return new GetAddicionalTaskInfoUseCaseImpl(externalServicePort);
     }
-    @Bean
-    public ExternalServiceTaskPort externalServicePort(){
-        return new ExternalServiceTaskAdapter();
-    }
+
+   @Bean
+public ExternalServiceTaskPort externalServicePort(
+        RestTemplate restTemplate,
+        @Value("${external.services.jsonplaceholder.base-url}") String baseUrl) {
+
+    return new ExternalServiceTaskAdapter(restTemplate, baseUrl);
+}
+    //public ExternalServiceTaskPort externalServicePort(){
+      //  return new ExternalServiceTaskAdapter();
+    //}
 
     //jwt
     @Bean
@@ -77,5 +87,10 @@ public class ApplicationConfig {
       return username -> userRepository.findByUsername(username)
               .orElseThrow(() -> new UsernameNotFoundException("User not Found"));
     }
+
+    @Bean
+public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    return builder.build();
+}
 
 }

@@ -27,7 +27,8 @@ public class TaskController {
         return new ResponseEntity<>(createdTask, HttpStatus.CREATED);
     }
 
-    @GetMapping("/api/tasks/{taskId}")
+@GetMapping("/{taskId}")
+    //@GetMapping("/api/tasks/{taskId}")
     public ResponseEntity<Task> getTaskById(@PathVariable Long taskId){
         return taskServices.getTask(taskId)
                 .map(task -> new ResponseEntity<>(task, HttpStatus.OK))
@@ -59,10 +60,13 @@ public class TaskController {
     }
 
 
-    @GetMapping("/api/tasks/details/{taskId}")
-    public ResponseEntity<AddicionalTaskInfo> getAddicionalTaskInfo(@PathVariable Long taskId){
-        AddicionalTaskInfo addicionalTaskInfo = taskServices.getAddicionalTaskInfo(taskId);
-       return new ResponseEntity<>(addicionalTaskInfo, HttpStatus.OK);
-    }
+@GetMapping("/details/{taskId}")
+public ResponseEntity<AddicionalTaskInfo> getAddicionalTaskInfo(@PathVariable Long taskId) {
+    AddicionalTaskInfo info = taskServices.getAddicionalTaskInfo(taskId);
+
+    return info != null
+            ? ResponseEntity.ok(info)
+            : ResponseEntity.notFound().build();
+}
 
 }

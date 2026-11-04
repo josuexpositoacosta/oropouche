@@ -37,15 +37,26 @@ public class JpaTaskRepositoryAdapter implements TaskRepositotyPort {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public Optional<Task> update(Task task) {
-        if (jpaTaskRepository.existsById(task.getId())){
-            TaskEntity taskEntity =  TaskEntity.fromDomainModel(task);
-            TaskEntity updatetaskEntity = jpaTaskRepository.save(taskEntity);
-            return Optional.of(updatetaskEntity.toDomainModel());
-        }
-        return Optional.empty();
-    }
+
+@Override
+public Optional<Task> update(Task task) {
+
+    return jpaTaskRepository.findById(task.getId())
+            .map(existingTask -> {
+
+                // Actualizar únicamente los campos modificables.
+                existingTask.setTitle(task.getTitle());
+                existingTask.setDescription(task.getDescription());
+                existingTask.setCompleted(task.isCompleted());
+
+                // Conservar la fecha original de creación.
+                TaskEntity updatedTask =
+                        jpaTaskRepository.save(existingTask);
+
+                return updatedTask.toDomainModel();
+            });
+}
+
 
     @Override
     public boolean deleteBytId(Long id) {

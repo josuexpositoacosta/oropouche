@@ -1,19 +1,22 @@
+
 package com.oropouche.tasks.infrastructure.entities;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 @Setter
 @Getter
 @Entity
 @Table(name = "app_trabajador")
 public class AppTrabajador {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idapp_trabajador;
+
     private String ci;
     private String clave;
     private String direccion;
@@ -28,8 +31,27 @@ public class AppTrabajador {
     private String apellido;
     private String nombre;
 
+    // Constructor requerido por JPA
+    protected AppTrabajador() {
+    }
 
-    public AppTrabajador(Long idapp_trabajador, String ci, String clave, String direccion, Integer enabled, String escolaridad, Timestamp fechaRegistro, String idestado, String sexo, String usuario, Long app_area_idarea, Long app_rol_idrol, String apellido, String nombre) {
+    // Constructor para crear trabajadores desde la aplicación
+    public AppTrabajador(
+            Long idapp_trabajador,
+            String ci,
+            String clave,
+            String direccion,
+            Integer enabled,
+            String escolaridad,
+            Timestamp fechaRegistro,
+            String idestado,
+            String sexo,
+            String usuario,
+            Long app_area_idarea,
+            Long app_rol_idrol,
+            String apellido,
+            String nombre
+    ) {
         this.idapp_trabajador = idapp_trabajador;
         this.ci = ci;
         this.clave = clave;
@@ -45,8 +67,4 @@ public class AppTrabajador {
         this.apellido = apellido;
         this.nombre = nombre;
     }
-
-    // Getters y Setters
-
-
 }
