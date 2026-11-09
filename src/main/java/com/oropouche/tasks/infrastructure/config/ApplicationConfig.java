@@ -6,13 +6,16 @@ import org.springframework.beans.factory.annotation.Value;
 
 import com.oropouche.tasks.application.services.TaskServices;
 import com.oropouche.tasks.application.usecases.*;
-import com.oropouche.tasks.infrastructure.repositories.user.UserRepository;
 import com.oropouche.tasks.domain.ports.in.GetAddicionalTaskInfoUseCase;
 import com.oropouche.tasks.domain.ports.out.ExternalServiceTaskPort;
 import com.oropouche.tasks.domain.ports.out.TaskRepositotyPort;
+import com.oropouche.tasks.domain.ports.out.UserRepositoryPort;
 import com.oropouche.tasks.infrastructure.adapters.ExternalServiceTaskAdapter;
 import com.oropouche.tasks.infrastructure.repositories.JpaTaskRepositoryAdapter;
+import com.oropouche.tasks.infrastructure.security.UserDetailsAdapter;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -30,10 +33,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @EnableJpaRepositories(basePackages = "com.oropouche.tasks.infrastructure.repositories")
 public class ApplicationConfig {
 
-   private final UserRepository userRepository;
-
     @Bean
-    public TaskServices taskServices(TaskRepositotyPort taskRepositotyPort, GetAddicionalTaskInfoUseCase getAddicionalTaskInfoUseCase ){
+    public TaskServices taskServices(
+            TaskRepositotyPort taskRepositotyPort,
+            GetAddicionalTaskInfoUseCase getAddicionalTaskInfoUseCase) {
+
         return new TaskServices(
                 new CreateTaskUseCaseImpl(taskRepositotyPort),
                 new RetrieveTaskUseCaseImpl(taskRepositotyPort),
@@ -42,38 +46,49 @@ public class ApplicationConfig {
                 getAddicionalTaskInfoUseCase
         );
     }
+
     @Bean
-    public TaskRepositotyPort taskRepositotyPort(JpaTaskRepositoryAdapter jpaTaskRepositoryAdapter){
+    public TaskRepositotyPort taskRepositotyPort(
+            JpaTaskRepositoryAdapter jpaTaskRepositoryAdapter) {
+
         return jpaTaskRepositoryAdapter;
     }
 
     @Bean
-    public GetAddicionalTaskInfoUseCase getAddicionalTaskInfoUseCase(ExternalServiceTaskPort externalServicePort){
-    return new GetAddicionalTaskInfoUseCaseImpl(externalServicePort);
+    public GetAddicionalTaskInfoUseCase getAddicionalTaskInfoUseCase(
+            ExternalServiceTaskPort externalServicePort) {
+
+        return new GetAddicionalTaskInfoUseCaseImpl(externalServicePort);
     }
 
-   @Bean
-public ExternalServiceTaskPort externalServicePort(
-        RestTemplate restTemplate,
-        @Value("${external.services.jsonplaceholder.base-url}") String baseUrl) {
-
-    return new ExternalServiceTaskAdapter(restTemplate, baseUrl);
-}
-    //public ExternalServiceTaskPort externalServicePort(){
-      //  return new ExternalServiceTaskAdapter();
-    //}
-
-    //jwt
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public ExternalServiceTaskPort externalServicePort(
+            RestTemplate restTemplate,
+            @Value("${external.services.jsonplaceholder.base-url}") String baseUrl) {
+
+        return new ExternalServiceTaskAdapter(restTemplate, baseUrl);
+    }
+
+    // JWT y autenticación
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+
         return config.getAuthenticationManager();
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(){
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService());
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
+    public AuthenticationProvider authenticationProvider(
+            UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
+
+        DaoAuthenticationProvider authenticationProvider =
+                new DaoAuthenticationProvider();
+
+        authenticationProvider.setUserDetailsService(userDetailsService);
+        authenticationProvider.setPasswordEncoder(passwordEncoder);
+
         return authenticationProvider;
     }
 
@@ -83,14 +98,17 @@ public ExternalServiceTaskPort externalServicePort(
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-      return username -> userRepository.findByUsername(username)
-              .orElseThrow(() -> new UsernameNotFoundException("User not Found"));
+    public UserDetailsService userDetailsService(
+            UserRepositoryPort userRepositoryPort) {
+
+        return username -> userRepositoryPort.findByUsername(username)
+                .map(UserDetailsAdapter::new)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not Found"));
     }
 
     @Bean
-public RestTemplate restTemplate(RestTemplateBuilder builder) {
-    return builder.build();
-}
-
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder.build();
+    }
 }

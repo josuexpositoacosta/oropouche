@@ -1,9 +1,10 @@
 package com.oropouche.tasks.infrastructure.controllers.user;
 
+import com.oropouche.tasks.application.services.user.UserService;
 import com.oropouche.tasks.domain.models.user.UserDTO;
 import com.oropouche.tasks.domain.models.user.UserRequest;
 import com.oropouche.tasks.domain.models.user.UserResponse;
-import com.oropouche.tasks.domain.models.user.UserService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,22 +21,25 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:4200"})
 public class UserController {
+
     private final UserService userService;
-    
+
     @GetMapping(value = "{id}")
-    public ResponseEntity<UserDTO> getUser(@PathVariable Integer id)
-    {
+    public ResponseEntity<UserDTO> getUser(@PathVariable Integer id) {
+
         UserDTO userDTO = userService.getUser(id);
-        if (userDTO==null)
-        {
-           return ResponseEntity.notFound().build();
+
+        if (userDTO == null) {
+            return ResponseEntity.notFound().build();
         }
+
         return ResponseEntity.ok(userDTO);
     }
 
     @PutMapping()
-    public ResponseEntity<UserResponse> updateUser(@RequestBody UserRequest userRequest)
-    {
+    public ResponseEntity<UserResponse> updateUser(
+            @RequestBody UserRequest userRequest) {
+
         return ResponseEntity.ok(userService.updateUser(userRequest));
     }
 }
