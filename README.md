@@ -1,4 +1,3 @@
-# oropouche
 
 # Oropouche
 
