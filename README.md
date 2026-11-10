@@ -29,32 +29,51 @@ The system is designed as a clinical decision-support tool. Healthcare professio
 
 ### Architecture
 
+### Architecture
+
+The project uses Hexagonal Architecture (Ports and Adapters), separating business logic from infrastructure and external technologies.
+
+The main architectural layers are:
+
+- **Domain:** Business models, rules, and ports.
+- **Application:** Use cases and application services.
+- **Infrastructure:** REST controllers, persistence adapters, database entities, and security.
+
 ### Architecture diagram
 
-The following diagram illustrates the current architectural structure:
+The following diagram illustrates the architectural pattern used in the project, particularly in the user management module.
 
 ```mermaid
 flowchart TB
     CLIENT["Client / Frontend"]
 
-    subgraph INFRA["Infrastructure Layer"]
-        CTRL["REST Controllers"]
-        AUTH["Authentication & Security"]
-        ADAPTER["Persistence Adapters"]
-        JPA["Spring Data JPA Repositories"]
-        DB[("MySQL / H2")]
-    end
-
     subgraph APP["Application Layer"]
-        SERVICE["Application Services"]
-        USECASE["Use Cases"]
+        SERVICE["UserService"]
+        USECASE["Application Use Cases"]
     end
 
     subgraph DOMAIN["Domain Layer"]
-        MODEL["Domain Models"]
-        PORT["Output Ports"]
-        RULES["Business Rules"]
+        MODEL["User Domain Model"]
+        PORT["UserRepositoryPort"]
     end
+
+    subgraph INFRA["Infrastructure Layer"]
+        CTRL["UserController"]
+        ADAPTER["JpaUserRepositoryAdapter"]
+        JPA["JpaUserRepository"]
+        DB[("MySQL / H2")]
+    end
+
+    CLIENT --> CTRL
+    CTRL --> SERVICE
+    SERVICE --> USECASE
+    USECASE --> MODEL
+    USECASE --> PORT
+    ADAPTER -.-> PORT
+    ADAPTER --> JPA
+    JPA --> DB
+```
+
 
     CLIENT --> CTRL
     CLIENT --> AUTH
@@ -144,7 +163,7 @@ Las principales capas arquitectónicas son:
 - **Infraestructura:** Controladores REST, adaptadores JPA, persistencia y seguridad.
 
 
-```markdown
+
 El diagrama anterior ilustra la separación de responsabilidades entre las capas y la comunicación mediante puertos y adaptadores.
 
 
