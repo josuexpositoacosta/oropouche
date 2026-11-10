@@ -1,41 +1,43 @@
-
 # Oropouche
 
-### Sistema de gestión epidemiológica y apoyo a la evaluación clínica de casos de fiebre de Oropouche
+**Epidemiological Case Management System and Clinical Decision Support for Oropouche Fever**
 
-Oropouche es una plataforma backend diseñada para gestionar y realizar el seguimiento de casos de fiebre de Oropouche, organizados por áreas de salud.
+[English](#english) | [Español](#español)
 
-Su propósito es centralizar la información epidemiológica y clínica de los pacientes, facilitar el seguimiento de los casos y proporcionar herramientas de apoyo al personal médico para la evaluación, elaboración de dictámenes y planificación de la atención sanitaria.
+---
 
-## Objetivo del proyecto
+## English
 
-Contribuir a una mejor gestión de los casos de fiebre de Oropouche mediante una plataforma que permita organizar la información por áreas de salud, facilitar el trabajo del personal sanitario y apoyar la toma de decisiones clínicas.
+### Overview
 
-## Funcionalidades del sistema
+Oropouche is a backend software project designed to manage and track Oropouche fever cases across different healthcare areas.
 
-El alcance funcional contempla:
+Its purpose is to centralize epidemiological and clinical information, help healthcare professionals evaluate reported cases, document medical assessments, and organize patient care plans and follow-up activities.
 
-- **Gestión de áreas de salud:** organización territorial y administrativa de los casos.
-- **Gestión de pacientes:** registro y consulta de información de los pacientes.
-- **Gestión epidemiológica:** registro y clasificación de casos sospechosos, probables y confirmados.
-- **Evaluación clínica:** documentación de síntomas, antecedentes y evolución del paciente.
-- **Dictamen médico:** registro del criterio y evaluación del profesional sanitario.
-- **Planes de atención:** documentación de las indicaciones y medidas de seguimiento establecidas por el médico.
-- **Seguimiento de casos:** control de la evolución y estado de los pacientes.
-- **Administración de usuarios y roles:** gestión de los diferentes perfiles del personal.
-- **Estadísticas epidemiológicas:** información consolidada para analizar los casos por áreas de salud.
+The system is designed as a clinical decision-support tool. Healthcare professionals remain responsible for evaluating each patient and making clinical decisions.
 
-## Arquitectura
+### Main objectives
 
-El proyecto adopta una arquitectura hexagonal (Ports and Adapters), buscando separar las reglas de negocio de los mecanismos de persistencia, comunicación y servicios externos.
+- Manage healthcare areas and their associated cases.
+- Maintain patient information and epidemiological records.
+- Organize suspected, probable, and confirmed cases.
+- Support clinical assessment and medical documentation.
+- Record medical opinions and care plans.
+- Track patient follow-up and case progress.
+- Manage users and access roles.
+- Provide information to support epidemiological monitoring.
 
-La organización principal contempla:
+### Architecture
 
-- **Domain:** modelos de dominio y puertos.
-- **Application:** servicios y casos de uso.
-- **Infrastructure:** controladores REST, adaptadores JPA, persistencia y seguridad.
+The project uses Hexagonal Architecture (Ports and Adapters), separating business logic from infrastructure and external technologies.
 
-## Tecnologías
+The main architectural layers are:
+
+- **Domain:** Business models, rules, and ports.
+- **Application:** Use cases and application services.
+- **Infrastructure:** REST controllers, persistence adapters, database entities, and security.
+
+### Technology stack
 
 - Java
 - Spring Boot
@@ -44,24 +46,90 @@ La organización principal contempla:
 - Spring Security
 - Maven
 - MySQL
-- H2 para pruebas
+- H2 Database
+- JUnit and Mockito
+
+### Tests
+
+The project includes automated tests for persistence components and REST controllers.
+
+Latest recorded validation: 28 tests executed, with no failures or errors.
+
+### Project status
+
+**In development.**
+
+The project is undergoing architectural improvements and domain modeling to evolve toward its epidemiological case-management objectives. Not all the functional modules described above are implemented yet.
+
+### Clinical considerations
+
+Oropouche is a tool for supporting epidemiological management and clinical assessment. It does not replace medical diagnosis, professional judgment, or treatment decisions.
+
+### Repository
+
+[GitHub - josuexpositoacosta/oropouche](https://github.com/josuexpositoacosta/oropouche)
+
+---
+
+## Español
+
+### Descripción general
+
+Oropouche es un proyecto de software backend diseñado para gestionar y realizar el seguimiento de casos de fiebre de Oropouche en las diferentes áreas de salud.
+
+Su propósito es centralizar la información epidemiológica y clínica de los pacientes, facilitar el seguimiento de los casos y proporcionar herramientas de apoyo al personal médico para la evaluación, elaboración de dictámenes y planificación de la atención sanitaria.
+
+El sistema está concebido como una herramienta de apoyo a la toma de decisiones clínicas. La evaluación de cada paciente y las decisiones médicas continúan siendo responsabilidad del personal sanitario.
+
+### Objetivos principales
+
+- Gestionar las áreas de salud y sus casos asociados.
+- Mantener la información de los pacientes y sus registros epidemiológicos.
+- Organizar los casos sospechosos, probables y confirmados.
+- Apoyar la evaluación clínica y la documentación médica.
+- Registrar dictámenes médicos y planes de atención.
+- Dar seguimiento a los pacientes y a la evolución de los casos.
+- Gestionar usuarios y roles de acceso.
+- Proporcionar información para apoyar la vigilancia epidemiológica.
+
+### Arquitectura
+
+El proyecto adopta una arquitectura hexagonal (Puertos y Adaptadores), separando las reglas de negocio de los mecanismos de persistencia, comunicación y servicios externos.
+
+Las principales capas arquitectónicas son:
+
+- **Dominio:** Modelos de dominio, reglas y puertos.
+- **Aplicación:** Servicios y casos de uso.
+- **Infraestructura:** Controladores REST, adaptadores JPA, persistencia y seguridad.
+
+### Tecnologías
+
+- Java
+- Spring Boot
+- Spring Data JPA
+- Hibernate
+- Spring Security
+- Maven
+- MySQL
+- H2 Database
 - JUnit y Mockito
 
-## Pruebas
+### Pruebas
 
 El proyecto dispone de pruebas automatizadas para componentes de persistencia y controladores REST.
 
 Última validación registrada: 28 pruebas ejecutadas, sin fallos ni errores.
 
-## Estado del proyecto
+### Estado del proyecto
 
-Proyecto en desarrollo. La base arquitectónica y los componentes de gestión de usuarios y tareas se encuentran en proceso de evolución hacia el sistema integral de gestión epidemiológica de Oropouche.
+**En desarrollo.**
 
-## Consideraciones clínicas
+La base arquitectónica y los componentes existentes están evolucionando hacia el sistema integral de gestión epidemiológica de Oropouche. No todos los módulos funcionales descritos anteriormente están implementados todavía.
 
-Oropouche es una herramienta de apoyo a la gestión y evaluación clínica. No sustituye el diagnóstico, el criterio ni las decisiones terapéuticas del personal médico.
+### Consideraciones clínicas
 
-## Repositorio
+Oropouche es una herramienta de apoyo a la gestión epidemiológica y evaluación clínica. No sustituye el diagnóstico, el criterio ni las decisiones terapéuticas del personal médico.
+
+### Repositorio
 
 [GitHub - josuexpositoacosta/oropouche](https://github.com/josuexpositoacosta/oropouche)
-
