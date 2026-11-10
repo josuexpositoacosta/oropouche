@@ -29,6 +29,47 @@ The system is designed as a clinical decision-support tool. Healthcare professio
 
 ### Architecture
 
+### Architecture diagram
+
+The following diagram illustrates the current architectural structure:
+
+```mermaid
+flowchart TB
+    CLIENT["Client / Frontend"]
+
+    subgraph INFRA["Infrastructure Layer"]
+        CTRL["REST Controllers"]
+        AUTH["Authentication & Security"]
+        ADAPTER["Persistence Adapters"]
+        JPA["Spring Data JPA Repositories"]
+        DB[("MySQL / H2")]
+    end
+
+    subgraph APP["Application Layer"]
+        SERVICE["Application Services"]
+        USECASE["Use Cases"]
+    end
+
+    subgraph DOMAIN["Domain Layer"]
+        MODEL["Domain Models"]
+        PORT["Output Ports"]
+        RULES["Business Rules"]
+    end
+
+    CLIENT --> CTRL
+    CLIENT --> AUTH
+    CTRL --> SERVICE
+    AUTH --> SERVICE
+    SERVICE --> USECASE
+    USECASE --> MODEL
+    USECASE --> PORT
+    MODEL --> RULES
+    PORT -.-> ADAPTER
+    ADAPTER --> JPA
+    JPA --> DB
+
+
+
 The project uses Hexagonal Architecture (Ports and Adapters), separating business logic from infrastructure and external technologies.
 
 The main architectural layers are:
@@ -101,6 +142,11 @@ Las principales capas arquitectónicas son:
 - **Dominio:** Modelos de dominio, reglas y puertos.
 - **Aplicación:** Servicios y casos de uso.
 - **Infraestructura:** Controladores REST, adaptadores JPA, persistencia y seguridad.
+
+
+```markdown
+El diagrama anterior ilustra la separación de responsabilidades entre las capas y la comunicación mediante puertos y adaptadores.
+
 
 ### Tecnologías
 
