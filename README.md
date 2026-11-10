@@ -29,9 +29,7 @@ The system is designed as a clinical decision-support tool. Healthcare professio
 
 ### Architecture
 
-### Architecture
-
-The project uses Hexagonal Architecture (Ports and Adapters), separating business logic from infrastructure and external technologies.
+The project is being developed using **Hexagonal Architecture (Ports and Adapters)** to separate business logic from infrastructure and external technologies.
 
 The main architectural layers are:
 
@@ -39,13 +37,22 @@ The main architectural layers are:
 - **Application:** Use cases and application services.
 - **Infrastructure:** REST controllers, persistence adapters, database entities, and security.
 
+The hexagonal architecture has been implemented particularly in the user management module and is part of the ongoing architectural evolution of the project.
+
 ### Architecture diagram
 
-The following diagram illustrates the architectural pattern used in the project, particularly in the user management module.
+The following diagram illustrates the architecture currently implemented in the user management module.
 
 ```mermaid
 flowchart TB
     CLIENT["Client / Frontend"]
+
+    subgraph INFRA["Infrastructure Layer"]
+        CTRL["UserController"]
+        ADAPTER["JpaUserRepositoryAdapter"]
+        JPA["JpaUserRepository"]
+        DB[("MySQL / H2")]
+    end
 
     subgraph APP["Application Layer"]
         SERVICE["UserService"]
@@ -55,13 +62,6 @@ flowchart TB
     subgraph DOMAIN["Domain Layer"]
         MODEL["User Domain Model"]
         PORT["UserRepositoryPort"]
-    end
-
-    subgraph INFRA["Infrastructure Layer"]
-        CTRL["UserController"]
-        ADAPTER["JpaUserRepositoryAdapter"]
-        JPA["JpaUserRepository"]
-        DB[("MySQL / H2")]
     end
 
     CLIENT --> CTRL
@@ -74,56 +74,33 @@ flowchart TB
     JPA --> DB
 ```
 
-
-    CLIENT --> CTRL
-    CLIENT --> AUTH
-    CTRL --> SERVICE
-    AUTH --> SERVICE
-    SERVICE --> USECASE
-    USECASE --> MODEL
-    USECASE --> PORT
-    MODEL --> RULES
-    PORT -.-> ADAPTER
-    ADAPTER --> JPA
-    JPA --> DB
-
-
-
-The project uses Hexagonal Architecture (Ports and Adapters), separating business logic from infrastructure and external technologies.
-
-The main architectural layers are:
-
-- **Domain:** Business models, rules, and ports.
-- **Application:** Use cases and application services.
-- **Infrastructure:** REST controllers, persistence adapters, database entities, and security.
-
 ### Technology stack
 
-- Java
-- Spring Boot
-- Spring Data JPA
-- Hibernate
-- Spring Security
-- Maven
-- MySQL
-- H2 Database
-- JUnit and Mockito
+- **Language:** Java
+- **Framework:** Spring Boot
+- **Persistence:** Spring Data JPA, Hibernate
+- **Security:** Spring Security
+- **Build tool:** Maven
+- **Databases:** MySQL and H2 Database
+- **Testing:** JUnit and Mockito
 
-### Tests
+### Testing
 
-The project includes automated tests for persistence components and REST controllers.
+The project includes automated tests for application components, persistence, and REST controllers.
 
-Latest recorded validation: 28 tests executed, with no failures or errors.
+Latest recorded validation: **28 tests executed, with no failures or errors.**
 
 ### Project status
 
 **In development.**
 
-The project is undergoing architectural improvements and domain modeling to evolve toward its epidemiological case-management objectives. Not all the functional modules described above are implemented yet.
+The project is undergoing architectural improvements, domain modeling, and implementation of its epidemiological case-management functionality.
+
+Not all the functional modules described in the objectives are implemented yet.
 
 ### Clinical considerations
 
-Oropouche is a tool for supporting epidemiological management and clinical assessment. It does not replace medical diagnosis, professional judgment, or treatment decisions.
+Oropouche is intended to support epidemiological management and clinical assessment. It does not replace medical diagnosis, professional judgment, or treatment decisions.
 
 ### Repository
 
@@ -154,47 +131,83 @@ El sistema está concebido como una herramienta de apoyo a la toma de decisiones
 
 ### Arquitectura
 
-El proyecto adopta una arquitectura hexagonal (Puertos y Adaptadores), separando las reglas de negocio de los mecanismos de persistencia, comunicación y servicios externos.
+El proyecto se está desarrollando utilizando **Arquitectura Hexagonal (Puertos y Adaptadores)**, con el objetivo de separar las reglas de negocio de los mecanismos de persistencia, comunicación y servicios externos.
 
 Las principales capas arquitectónicas son:
 
-- **Dominio:** Modelos de dominio, reglas y puertos.
-- **Aplicación:** Servicios y casos de uso.
-- **Infraestructura:** Controladores REST, adaptadores JPA, persistencia y seguridad.
+- **Dominio:** Modelos de dominio, reglas de negocio y puertos.
+- **Aplicación:** Casos de uso y servicios de aplicación.
+- **Infraestructura:** Controladores REST, adaptadores de persistencia, entidades de base de datos y seguridad.
 
+La arquitectura hexagonal ya está implementada especialmente en el módulo de gestión de usuarios y forma parte de la evolución arquitectónica del proyecto.
 
+### Diagrama de arquitectura
 
-El diagrama anterior ilustra la separación de responsabilidades entre las capas y la comunicación mediante puertos y adaptadores.
+El siguiente diagrama representa la arquitectura implementada actualmente en el módulo de gestión de usuarios.
 
+```mermaid
+flowchart TB
+    CLIENT["Cliente / Frontend"]
+
+    subgraph INFRA["Capa de Infraestructura"]
+        CTRL["UserController"]
+        ADAPTER["JpaUserRepositoryAdapter"]
+        JPA["JpaUserRepository"]
+        DB[("MySQL / H2")]
+    end
+
+    subgraph APP["Capa de Aplicación"]
+        SERVICE["UserService"]
+        USECASE["Casos de uso"]
+    end
+
+    subgraph DOMAIN["Capa de Dominio"]
+        MODEL["Modelo de dominio User"]
+        PORT["UserRepositoryPort"]
+    end
+
+    CLIENT --> CTRL
+    CTRL --> SERVICE
+    SERVICE --> USECASE
+    USECASE --> MODEL
+    USECASE --> PORT
+    ADAPTER -.-> PORT
+    ADAPTER --> JPA
+    JPA --> DB
+```
 
 ### Tecnologías
 
-- Java
-- Spring Boot
-- Spring Data JPA
-- Hibernate
-- Spring Security
-- Maven
-- MySQL
-- H2 Database
-- JUnit y Mockito
+- **Lenguaje:** Java
+- **Framework:** Spring Boot
+- **Persistencia:** Spring Data JPA, Hibernate
+- **Seguridad:** Spring Security
+- **Gestión de construcción:** Maven
+- **Bases de datos:** MySQL y H2 Database
+- **Pruebas:** JUnit y Mockito
 
 ### Pruebas
 
-El proyecto dispone de pruebas automatizadas para componentes de persistencia y controladores REST.
+El proyecto dispone de pruebas automatizadas para componentes de aplicación, persistencia y controladores REST.
 
-Última validación registrada: 28 pruebas ejecutadas, sin fallos ni errores.
+Última validación registrada: **28 pruebas ejecutadas, sin fallos ni errores.**
 
 ### Estado del proyecto
 
 **En desarrollo.**
 
-La base arquitectónica y los componentes existentes están evolucionando hacia el sistema integral de gestión epidemiológica de Oropouche. No todos los módulos funcionales descritos anteriormente están implementados todavía.
+El proyecto se encuentra en evolución, con mejoras arquitectónicas, modelado del dominio e implementación progresiva de las funcionalidades de gestión epidemiológica.
+
+No todos los módulos funcionales descritos en los objetivos están implementados todavía.
 
 ### Consideraciones clínicas
 
-Oropouche es una herramienta de apoyo a la gestión epidemiológica y evaluación clínica. No sustituye el diagnóstico, el criterio ni las decisiones terapéuticas del personal médico.
+Oropouche está concebido como una herramienta de apoyo a la gestión epidemiológica y a la evaluación clínica. No sustituye el diagnóstico médico, el criterio profesional ni las decisiones terapéuticas del personal sanitario.
 
 ### Repositorio
 
 [GitHub - josuexpositoacosta/oropouche](https://github.com/josuexpositoacosta/oropouche)
+
+---
+
+**Author:** [Josué Exposito Acosta](https://github.com/josuexpositoacosta)
