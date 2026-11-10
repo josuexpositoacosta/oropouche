@@ -28,6 +28,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.oropouche.tasks.application.services.area_salud.AreaSaludService;
+import com.oropouche.tasks.domain.ports.out.AreaSaludRepositoryPort;
+
 @Configuration
 @RequiredArgsConstructor
 @EnableJpaRepositories(basePackages = "com.oropouche.tasks.infrastructure.repositories")
@@ -70,6 +73,15 @@ public class ApplicationConfig {
     }
 
     // JWT y autenticación
+
+@Bean
+public AreaSaludService areaSaludService(
+        AreaSaludRepositoryPort areaSaludRepositoryPort) {
+
+    return new AreaSaludService(areaSaludRepositoryPort);
+}
+
+
 
     @Bean
     public AuthenticationManager authenticationManager(
