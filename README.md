@@ -37,42 +37,76 @@ The main architectural layers are:
 - **Application:** Use cases and application services.
 - **Infrastructure:** REST controllers, persistence adapters, database entities, and security.
 
-The hexagonal architecture has been implemented particularly in the user management module and is part of the ongoing architectural evolution of the project.
+The hexagonal architecture is applied across all current modules: tasks, authentication, users, healthcare areas, and patients. The domain and application layers have no dependencies on Spring, JPA, or any other infrastructure technology; frameworks are only used in the infrastructure layer, which is connected to the use cases through ports.
 
 ### Architecture diagram
 
-The following diagram illustrates the architecture currently implemented in the user management module.
+The following diagram illustrates how the layers interact in every module.
 
 ```mermaid
 flowchart TB
     CLIENT["Client / Frontend"]
 
     subgraph INFRA["Infrastructure Layer"]
-        CTRL["UserController"]
-        ADAPTER["JpaUserRepositoryAdapter"]
-        JPA["JpaUserRepository"]
+        CTRL["REST controllers + DTOs<br/>Auth · User · AreaSalud · Paciente · Task"]
+        ADAPTERS["Output adapters<br/>JPA repositories · BCrypt · JWT · Spring authentication · External API"]
         DB[("MySQL / H2")]
     end
 
     subgraph APP["Application Layer"]
-        SERVICE["UserService"]
-        USECASE["Application Use Cases"]
+        USECASE["Use cases and application services<br/>(plain Java)"]
     end
 
     subgraph DOMAIN["Domain Layer"]
-        MODEL["User Domain Model"]
-        PORT["UserRepositoryPort"]
+        IN["Input ports<br/>LoginUseCase · PacienteUseCase · …"]
+        MODEL["Domain models and exceptions"]
+        OUT["Output ports<br/>UserRepositoryPort · TokenProviderPort · …"]
     end
 
     CLIENT --> CTRL
-    CTRL --> SERVICE
-    SERVICE --> USECASE
+    CTRL --> IN
+    USECASE -.implements.-> IN
     USECASE --> MODEL
-    USECASE --> PORT
-    ADAPTER -.-> PORT
-    ADAPTER --> JPA
-    JPA --> DB
+    USECASE --> OUT
+    ADAPTERS -.implements.-> OUT
+    ADAPTERS --> DB
 ```
+
+### Implemented modules
+
+| Module | Endpoints | Notes |
+|---|---|---|
+| Authentication | `POST /auth/register`, `POST /auth/login` | Public. Returns a JWT. Public registration always assigns the `USER` role. |
+| Users | `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Only personal data can be updated (not username, password, or role). |
+| Healthcare areas | `/api/v1/areas-salud` | Create, list (all / active), find by id or code, update, deactivate. |
+| Patients | `/api/v1/pacientes` | Register, list (all / by area), find, update, deactivate. |
+| Tasks | `/api/tasks` | CRUD and additional information from an external service. |
+
+Business rule: a patient can only be assigned to a healthcare area that exists and is active. Records are deactivated, never deleted.
+
+### Security
+
+- Every endpoint except `/auth/**` requires a JWT (`Authorization: Bearer <token>`).
+- Missing, malformed, expired, or invalid tokens receive `401 Unauthorized`.
+- Tokens are valid for 24 hours (configurable).
+- Error responses do not expose internal details: `400` invalid data, `401` not authenticated, `404` not found, `409` duplicate.
+
+### Configuration and running locally
+
+Secrets are not stored in the repository. They are provided through environment variables, or through an `application-local.properties` file in the project root, which is excluded from Git:
+
+```bash
+cp application-local.properties.example application-local.properties
+# fill in DB_PASSWORD and JWT_SECRET (generate with: openssl rand -base64 32)
+./mvnw spring-boot:run
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `DB_HOST` / `DB_PORT` / `DB_NAME` | `localhost` / `3306` / `oropouchedb` | MySQL connection |
+| `DB_USERNAME` / `DB_PASSWORD` | `root` / *(empty)* | MySQL credentials |
+| `JWT_SECRET` | *(required)* | Base64 HMAC key, at least 256 bits |
+| `JWT_EXPIRATION_MS` | `86400000` | Token validity (24 h) |
 
 ### Technology stack
 
@@ -86,9 +120,9 @@ flowchart TB
 
 ### Testing
 
-The project includes automated tests for application components, persistence, and REST controllers.
+The project includes automated tests for use cases, application services, persistence adapters, REST controllers, and security rules (integration tests with H2).
 
-Latest recorded validation: **28 tests executed, with no failures or errors.**
+Latest recorded validation: **76 tests executed, with no failures or errors.**
 
 ### Project status
 
@@ -139,42 +173,76 @@ Las principales capas arquitectónicas son:
 - **Aplicación:** Casos de uso y servicios de aplicación.
 - **Infraestructura:** Controladores REST, adaptadores de persistencia, entidades de base de datos y seguridad.
 
-La arquitectura hexagonal ya está implementada especialmente en el módulo de gestión de usuarios y forma parte de la evolución arquitectónica del proyecto.
+La arquitectura hexagonal está aplicada en todos los módulos actuales: tareas, autenticación, usuarios, áreas de salud y pacientes. Las capas de dominio y aplicación no dependen de Spring, JPA ni de ninguna otra tecnología de infraestructura; los frameworks solo se usan en la capa de infraestructura, que se conecta con los casos de uso a través de puertos.
 
 ### Diagrama de arquitectura
 
-El siguiente diagrama representa la arquitectura implementada actualmente en el módulo de gestión de usuarios.
+El siguiente diagrama representa cómo interactúan las capas en cada módulo.
 
 ```mermaid
 flowchart TB
     CLIENT["Cliente / Frontend"]
 
     subgraph INFRA["Capa de Infraestructura"]
-        CTRL["UserController"]
-        ADAPTER["JpaUserRepositoryAdapter"]
-        JPA["JpaUserRepository"]
+        CTRL["Controladores REST + DTOs<br/>Auth · User · AreaSalud · Paciente · Task"]
+        ADAPTERS["Adaptadores de salida<br/>Repositorios JPA · BCrypt · JWT · Autenticación Spring · API externa"]
         DB[("MySQL / H2")]
     end
 
     subgraph APP["Capa de Aplicación"]
-        SERVICE["UserService"]
-        USECASE["Casos de uso"]
+        USECASE["Casos de uso y servicios de aplicación<br/>(Java puro)"]
     end
 
     subgraph DOMAIN["Capa de Dominio"]
-        MODEL["Modelo de dominio User"]
-        PORT["UserRepositoryPort"]
+        IN["Puertos de entrada<br/>LoginUseCase · PacienteUseCase · …"]
+        MODEL["Modelos y excepciones de dominio"]
+        OUT["Puertos de salida<br/>UserRepositoryPort · TokenProviderPort · …"]
     end
 
     CLIENT --> CTRL
-    CTRL --> SERVICE
-    SERVICE --> USECASE
+    CTRL --> IN
+    USECASE -.implementa.-> IN
     USECASE --> MODEL
-    USECASE --> PORT
-    ADAPTER -.-> PORT
-    ADAPTER --> JPA
-    JPA --> DB
+    USECASE --> OUT
+    ADAPTERS -.implementa.-> OUT
+    ADAPTERS --> DB
 ```
+
+### Módulos implementados
+
+| Módulo | Endpoints | Notas |
+|---|---|---|
+| Autenticación | `POST /auth/register`, `POST /auth/login` | Públicos. Devuelven un JWT. El registro público siempre asigna el rol `USER`. |
+| Usuarios | `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Solo se actualizan los datos personales (no el usuario, la contraseña ni el rol). |
+| Áreas de salud | `/api/v1/areas-salud` | Crear, listar (todas / activas), buscar por id o código, actualizar, desactivar. |
+| Pacientes | `/api/v1/pacientes` | Registrar, listar (todos / por área), buscar, actualizar, desactivar. |
+| Tareas | `/api/tasks` | CRUD e información adicional desde un servicio externo. |
+
+Regla de negocio: un paciente solo puede asignarse a un área de salud existente y activa. Los registros se desactivan, nunca se eliminan.
+
+### Seguridad
+
+- Todos los endpoints excepto `/auth/**` requieren un JWT (`Authorization: Bearer <token>`).
+- Sin token, o con un token mal formado, caducado o inválido, se responde `401 Unauthorized`.
+- Los tokens son válidos durante 24 horas (configurable).
+- Las respuestas de error no exponen detalles internos: `400` datos inválidos, `401` no autenticado, `404` no encontrado, `409` duplicado.
+
+### Configuración y ejecución local
+
+Los secretos no se guardan en el repositorio. Se proporcionan mediante variables de entorno, o mediante un archivo `application-local.properties` en la raíz del proyecto, que está excluido de Git:
+
+```bash
+cp application-local.properties.example application-local.properties
+# rellenar DB_PASSWORD y JWT_SECRET (generar con: openssl rand -base64 32)
+./mvnw spring-boot:run
+```
+
+| Variable | Valor por defecto | Descripción |
+|---|---|---|
+| `DB_HOST` / `DB_PORT` / `DB_NAME` | `localhost` / `3306` / `oropouchedb` | Conexión a MySQL |
+| `DB_USERNAME` / `DB_PASSWORD` | `root` / *(vacío)* | Credenciales de MySQL |
+| `JWT_SECRET` | *(obligatoria)* | Clave HMAC en Base64, mínimo 256 bits |
+| `JWT_EXPIRATION_MS` | `86400000` | Validez del token (24 h) |
 
 ### Tecnologías
 
@@ -188,9 +256,9 @@ flowchart TB
 
 ### Pruebas
 
-El proyecto dispone de pruebas automatizadas para componentes de aplicación, persistencia y controladores REST.
+El proyecto dispone de pruebas automatizadas para casos de uso, servicios de aplicación, adaptadores de persistencia, controladores REST y reglas de seguridad (pruebas de integración con H2).
 
-Última validación registrada: **28 pruebas ejecutadas, sin fallos ni errores.**
+Última validación registrada: **76 pruebas ejecutadas, sin fallos ni errores.**
 
 ### Estado del proyecto
 
