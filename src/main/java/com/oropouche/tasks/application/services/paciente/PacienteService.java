@@ -1,7 +1,12 @@
 
 package com.oropouche.tasks.application.services.paciente;
 
+import com.oropouche.tasks.domain.exceptions.RecursoDuplicadoException;
+import com.oropouche.tasks.domain.exceptions.RecursoNoEncontradoException;
+import com.oropouche.tasks.domain.models.area_salud.AreaSalud;
 import com.oropouche.tasks.domain.models.paciente.Paciente;
+import com.oropouche.tasks.domain.ports.in.PacienteUseCase;
+import com.oropouche.tasks.domain.ports.out.AreaSaludRepositoryPort;
 import com.oropouche.tasks.domain.ports.out.PacienteRepositoryPort;
 
 import java.time.LocalDate;
@@ -9,22 +14,29 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public class PacienteService {
+public class PacienteService implements PacienteUseCase {
 
     private final PacienteRepositoryPort pacienteRepositoryPort;
+    private final AreaSaludRepositoryPort areaSaludRepositoryPort;
 
-    public PacienteService(PacienteRepositoryPort pacienteRepositoryPort) {
+    public PacienteService(
+            PacienteRepositoryPort pacienteRepositoryPort,
+            AreaSaludRepositoryPort areaSaludRepositoryPort) {
+
         this.pacienteRepositoryPort = pacienteRepositoryPort;
+        this.areaSaludRepositoryPort = areaSaludRepositoryPort;
     }
 
+    @Override
     public Paciente registrar(Paciente paciente) {
 
         validarDatos(paciente);
+        validarAreaActiva(paciente.getAreaSaludId());
 
         if (pacienteRepositoryPort.existsByNumeroDocumento(
                 paciente.getTipoDocumento(),
                 paciente.getNumeroDocumento())) {
-            throw new IllegalArgumentException(
+            throw new RecursoDuplicadoException(
                     "Ya existe un paciente con ese documento"
             );
         }
@@ -36,14 +48,18 @@ public class PacienteService {
         return pacienteRepositoryPort.save(paciente);
     }
 
+    @Override
     public Paciente actualizar(Long id, Paciente paciente) {
 
-        Paciente existente = pacienteRepositoryPort.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe el paciente con ID: " + id
-                ));
+        Paciente existente = buscarPorId(id);
 
         validarDatos(paciente);
+
+        // Cambiar de área exige que la nueva esté activa; mantener la misma
+        // permite editar pacientes de un área ya desactivada.
+        if (!paciente.getAreaSaludId().equals(existente.getAreaSaludId())) {
+            validarAreaActiva(paciente.getAreaSaludId());
+        }
 
         Optional<Paciente> duplicado =
                 pacienteRepositoryPort.findByNumeroDocumento(
@@ -53,7 +69,7 @@ public class PacienteService {
 
         if (duplicado.isPresent()
                 && !duplicado.get().getId().equals(id)) {
-            throw new IllegalArgumentException(
+            throw new RecursoDuplicadoException(
                     "El documento pertenece a otro paciente"
             );
         }
@@ -65,13 +81,27 @@ public class PacienteService {
         return pacienteRepositoryPort.save(paciente);
     }
 
+    @Override
     public Paciente buscarPorId(Long id) {
+
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException(
+                    "El identificador del paciente no es válido"
+            );
+        }
+
         return pacienteRepositoryPort.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el paciente con ID: " + id
                 ));
     }
 
+    @Override
+    public List<Paciente> listarTodos() {
+        return pacienteRepositoryPort.findAll();
+    }
+
+    @Override
     public List<Paciente> buscarPorAreaSalud(Long areaSaludId) {
 
         if (areaSaludId == null || areaSaludId <= 0) {
@@ -80,9 +110,16 @@ public class PacienteService {
             );
         }
 
+        if (areaSaludRepositoryPort.findById(areaSaludId).isEmpty()) {
+            throw new RecursoNoEncontradoException(
+                    "No existe el área de salud con ID: " + areaSaludId
+            );
+        }
+
         return pacienteRepositoryPort.findByAreaSaludId(areaSaludId);
     }
 
+    @Override
     public Paciente desactivar(Long id) {
 
         Paciente paciente = buscarPorId(id);
@@ -90,6 +127,23 @@ public class PacienteService {
         paciente.setActivo(false);
 
         return pacienteRepositoryPort.save(paciente);
+    }
+
+    /**
+     * Regla de negocio: un paciente solo puede asignarse a un área de salud existente y activa.
+     */
+    private void validarAreaActiva(Long areaSaludId) {
+
+        AreaSalud area = areaSaludRepositoryPort.findById(areaSaludId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe el área de salud con ID: " + areaSaludId
+                ));
+
+        if (!area.isActivo()) {
+            throw new IllegalArgumentException(
+                    "El área de salud " + area.getCodigo() + " está desactivada"
+            );
+        }
     }
 
     private void validarDatos(Paciente paciente) {

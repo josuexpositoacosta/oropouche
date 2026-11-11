@@ -1,9 +1,11 @@
 package com.oropouche.tasks.infrastructure.controllers.user;
 
-import com.oropouche.tasks.application.services.user.UserService;
-import com.oropouche.tasks.domain.models.user.UserDTO;
-import com.oropouche.tasks.domain.models.user.UserRequest;
-import com.oropouche.tasks.domain.models.user.UserResponse;
+import com.oropouche.tasks.domain.models.user.User;
+import com.oropouche.tasks.domain.ports.in.GetUserUseCase;
+import com.oropouche.tasks.domain.ports.in.UpdateUserUseCase;
+import com.oropouche.tasks.infrastructure.controllers.user.dto.UserDTO;
+import com.oropouche.tasks.infrastructure.controllers.user.dto.UserRequest;
+import com.oropouche.tasks.infrastructure.controllers.user.dto.UserResponse;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,32 +16,59 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.RequiredArgsConstructor;
-
+/**
+ * Adaptador de entrada REST para usuarios. Solo traduce HTTP ↔ casos de uso.
+ */
 @RestController
 @RequestMapping(value = "/api/v1/user")
-@RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:4200"})
 public class UserController {
 
-    private final UserService userService;
+    private final GetUserUseCase getUserUseCase;
+    private final UpdateUserUseCase updateUserUseCase;
+
+    public UserController(GetUserUseCase getUserUseCase, UpdateUserUseCase updateUserUseCase) {
+        this.getUserUseCase = getUserUseCase;
+        this.updateUserUseCase = updateUserUseCase;
+    }
 
     @GetMapping(value = "{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Integer id) {
 
-        UserDTO userDTO = userService.getUser(id);
-
-        if (userDTO == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(userDTO);
+        return getUserUseCase.getUser(id)
+                .map(this::toDTO)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping()
     public ResponseEntity<UserResponse> updateUser(
             @RequestBody UserRequest userRequest) {
 
-        return ResponseEntity.ok(userService.updateUser(userRequest));
+        return updateUserUseCase.updateUser(toDomain(userRequest))
+                .map(user -> ResponseEntity.ok(
+                        new UserResponse("El usuario se actualizó satisfactoriamente")))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private UserDTO toDTO(User user) {
+
+        return UserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .country(user.getCountry())
+                .build();
+    }
+
+    private User toDomain(UserRequest request) {
+
+        return User.builder()
+                .id(request.getId())
+                .firstname(request.getFirstname())
+                .lastname(request.getLastname())
+                .country(request.getCountry())
+                .build();
     }
 }

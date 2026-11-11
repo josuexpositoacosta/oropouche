@@ -1,13 +1,16 @@
 
 package com.oropouche.tasks.application.services.area_salud;
 
+import com.oropouche.tasks.domain.exceptions.RecursoDuplicadoException;
+import com.oropouche.tasks.domain.exceptions.RecursoNoEncontradoException;
 import com.oropouche.tasks.domain.models.area_salud.AreaSalud;
+import com.oropouche.tasks.domain.ports.in.AreaSaludUseCase;
 import com.oropouche.tasks.domain.ports.out.AreaSaludRepositoryPort;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class AreaSaludService {
+public class AreaSaludService implements AreaSaludUseCase {
 
     private final AreaSaludRepositoryPort areaSaludRepositoryPort;
 
@@ -16,6 +19,7 @@ public class AreaSaludService {
         this.areaSaludRepositoryPort = areaSaludRepositoryPort;
     }
 
+    @Override
     public AreaSalud registrar(AreaSalud areaSalud) {
 
         validarDatos(areaSalud);
@@ -24,13 +28,13 @@ public class AreaSaludService {
         String nombre = areaSalud.getNombre().trim();
 
         if (areaSaludRepositoryPort.existsByCodigo(codigo)) {
-            throw new IllegalArgumentException(
+            throw new RecursoDuplicadoException(
                     "Ya existe un área con ese código"
             );
         }
 
         if (areaSaludRepositoryPort.existsByNombre(nombre)) {
-            throw new IllegalArgumentException(
+            throw new RecursoDuplicadoException(
                     "Ya existe un área con ese nombre"
             );
         }
@@ -44,34 +48,39 @@ public class AreaSaludService {
         return areaSaludRepositoryPort.save(areaSalud);
     }
 
+    @Override
     public AreaSalud buscarPorId(Long id) {
 
         validarId(id);
 
         return areaSaludRepositoryPort.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el área de salud con ID: " + id
                 ));
     }
 
+    @Override
     public AreaSalud buscarPorCodigo(String codigo) {
 
         validarTexto(codigo, "Código");
 
         return areaSaludRepositoryPort.findByCodigo(codigo.trim())
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe un área con ese código"
                 ));
     }
 
+    @Override
     public List<AreaSalud> listarTodas() {
         return areaSaludRepositoryPort.findAll();
     }
 
+    @Override
     public List<AreaSalud> listarActivas() {
         return areaSaludRepositoryPort.findAllActivas();
     }
 
+    @Override
     public AreaSalud actualizar(Long id, AreaSalud datos) {
 
         AreaSalud existente = buscarPorId(id);
@@ -84,7 +93,7 @@ public class AreaSaludService {
         areaSaludRepositoryPort.findByCodigo(codigo)
                 .filter(area -> !area.getId().equals(id))
                 .ifPresent(area -> {
-                    throw new IllegalArgumentException(
+                    throw new RecursoDuplicadoException(
                             "El código pertenece a otra área"
                     );
                 });
@@ -94,7 +103,7 @@ public class AreaSaludService {
         .filter(area -> !area.getId().equals(id))
         .findFirst()
         .ifPresent(area -> {
-            throw new IllegalArgumentException(
+            throw new RecursoDuplicadoException(
                     "El nombre pertenece a otra área"
             );
         });
@@ -109,6 +118,7 @@ public class AreaSaludService {
         return areaSaludRepositoryPort.save(existente);
     }
 
+    @Override
     public AreaSalud desactivar(Long id) {
 
         AreaSalud area = buscarPorId(id);

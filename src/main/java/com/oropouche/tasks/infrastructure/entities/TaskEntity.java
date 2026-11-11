@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
 
 import java.time.LocalDateTime;
 
@@ -42,6 +43,16 @@ public class TaskEntity {
         this.description = description;
         this.creationDate = creationDate;
         this.completed = completed;
+    }
+
+    /**
+     * Asigna la fecha de creación al insertar si no viene informada.
+     */
+    @PrePersist
+    void onCreate() {
+        if (creationDate == null) {
+            creationDate = LocalDateTime.now();
+        }
     }
 
     public static TaskEntity fromDomainModel(Task task) {

@@ -1,6 +1,9 @@
 
 package com.oropouche.tasks.application.services.area_salud;
 
+import com.oropouche.tasks.domain.exceptions.RecursoDuplicadoException;
+import com.oropouche.tasks.domain.exceptions.RecursoNoEncontradoException;
+
 import com.oropouche.tasks.domain.models.area_salud.AreaSalud;
 import com.oropouche.tasks.domain.ports.out.AreaSaludRepositoryPort;
 
@@ -71,7 +74,7 @@ class AreaSaludServiceTest {
         when(repository.existsByCodigo("AS-001")).thenReturn(true);
 
         assertThrows(
-                IllegalArgumentException.class,
+                RecursoDuplicadoException.class,
                 () -> service.registrar(area)
         );
 
@@ -87,7 +90,7 @@ class AreaSaludServiceTest {
         when(repository.existsByNombre("Área de Salud Norte")).thenReturn(true);
 
         assertThrows(
-                IllegalArgumentException.class,
+                RecursoDuplicadoException.class,
                 () -> service.registrar(area)
         );
 
@@ -125,7 +128,7 @@ class AreaSaludServiceTest {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(
-                IllegalArgumentException.class,
+                RecursoNoEncontradoException.class,
                 () -> service.buscarPorId(99L)
         );
     }

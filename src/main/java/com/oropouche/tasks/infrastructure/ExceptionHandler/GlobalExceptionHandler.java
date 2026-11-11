@@ -1,13 +1,23 @@
 
 package com.oropouche.tasks.infrastructure.ExceptionHandler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
+
+import com.oropouche.tasks.domain.exceptions.InvalidCredentialsException;
+import com.oropouche.tasks.domain.exceptions.RecursoNoEncontradoException;
+import com.oropouche.tasks.domain.exceptions.RecursoDuplicadoException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handlerArgumentException(IllegalArgumentException ex)
@@ -15,9 +25,43 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<String>(ex.getMessage(),HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<String> handlerRecursoNoEncontrado(RecursoNoEncontradoException ex)
+    {
+        return new ResponseEntity<String>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<String> handlerInvalidCredentials(InvalidCredentialsException ex)
+    {
+        return new ResponseEntity<String>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    /** Cubre también {@code UserAlreadyExistsException}, que extiende de esta. */
+    @ExceptionHandler(RecursoDuplicadoException.class)
+    public ResponseEntity<String> handlerRecursoDuplicado(RecursoDuplicadoException ex)
+    {
+        return new ResponseEntity<String>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<String> handlerAuthenticationException(AuthenticationException ex)
+    {
+        return new ResponseEntity<String>("Usuario o contraseña incorrectos", HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<String> handlerDataIntegrityViolation(DataIntegrityViolationException ex)
+    {
+        LOGGER.warn("Violación de integridad de datos: {}", ex.getMostSpecificCause().getMessage());
+        return new ResponseEntity<String>("El recurso ya existe o viola una restricción de datos",
+                HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handlerRuntimeException(RuntimeException ex)
     {
-        return new ResponseEntity<String>(ex.getMessage(),HttpStatus.BAD_GATEWAY);
+        LOGGER.error("Error no controlado", ex);
+        return new ResponseEntity<String>("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

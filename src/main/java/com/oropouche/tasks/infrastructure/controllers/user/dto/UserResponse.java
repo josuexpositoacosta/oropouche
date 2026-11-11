@@ -1,4 +1,4 @@
-package com.oropouche.tasks.domain.models.user;
+package com.oropouche.tasks.infrastructure.controllers.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
-    int id;
-    String username;
-    String firstname;
-    String lastname;
-    String country;
+public class UserResponse {
+    String message;
 }

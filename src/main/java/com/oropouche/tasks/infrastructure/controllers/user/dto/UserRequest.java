@@ -1,4 +1,4 @@
-package com.oropouche.tasks.domain.models.user;
+package com.oropouche.tasks.infrastructure.controllers.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

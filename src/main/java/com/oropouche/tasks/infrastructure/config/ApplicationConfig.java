@@ -7,6 +7,20 @@ import org.springframework.beans.factory.annotation.Value;
 import com.oropouche.tasks.application.services.TaskServices;
 import com.oropouche.tasks.application.usecases.*;
 import com.oropouche.tasks.domain.ports.in.GetAddicionalTaskInfoUseCase;
+import com.oropouche.tasks.application.services.paciente.PacienteService;
+import com.oropouche.tasks.domain.ports.in.AreaSaludUseCase;
+import com.oropouche.tasks.domain.ports.in.PacienteUseCase;
+import com.oropouche.tasks.domain.ports.out.PacienteRepositoryPort;
+import com.oropouche.tasks.domain.ports.in.GetUserUseCase;
+import com.oropouche.tasks.domain.ports.in.LoginUseCase;
+import com.oropouche.tasks.domain.ports.in.RegisterUserUseCase;
+import com.oropouche.tasks.domain.ports.in.UpdateUserUseCase;
+import com.oropouche.tasks.infrastructure.transaction.TransactionalUpdateUserUseCase;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import com.oropouche.tasks.domain.ports.out.AuthenticationPort;
+import com.oropouche.tasks.domain.ports.out.PasswordEncoderPort;
+import com.oropouche.tasks.domain.ports.out.TokenProviderPort;
 import com.oropouche.tasks.domain.ports.out.ExternalServiceTaskPort;
 import com.oropouche.tasks.domain.ports.out.TaskRepositotyPort;
 import com.oropouche.tasks.domain.ports.out.UserRepositoryPort;
@@ -72,14 +86,59 @@ public class ApplicationConfig {
         return new ExternalServiceTaskAdapter(restTemplate, baseUrl);
     }
 
-    // JWT y autenticación
+    // Áreas de salud y pacientes
 
-@Bean
-public AreaSaludService areaSaludService(
-        AreaSaludRepositoryPort areaSaludRepositoryPort) {
+    @Bean
+    public AreaSaludUseCase areaSaludUseCase(AreaSaludRepositoryPort areaSaludRepositoryPort) {
 
-    return new AreaSaludService(areaSaludRepositoryPort);
-}
+        return new AreaSaludService(areaSaludRepositoryPort);
+    }
+
+    @Bean
+    public PacienteUseCase pacienteUseCase(
+            PacienteRepositoryPort pacienteRepositoryPort,
+            AreaSaludRepositoryPort areaSaludRepositoryPort) {
+
+        return new PacienteService(pacienteRepositoryPort, areaSaludRepositoryPort);
+    }
+
+    // Casos de uso de autenticación (Java puro, se conectan a sus puertos aquí)
+
+    @Bean
+    public LoginUseCase loginUseCase(
+            AuthenticationPort authenticationPort,
+            UserRepositoryPort userRepositoryPort,
+            TokenProviderPort tokenProviderPort) {
+
+        return new LoginUseCaseImpl(authenticationPort, userRepositoryPort, tokenProviderPort);
+    }
+
+    @Bean
+    public RegisterUserUseCase registerUserUseCase(
+            UserRepositoryPort userRepositoryPort,
+            PasswordEncoderPort passwordEncoderPort,
+            TokenProviderPort tokenProviderPort) {
+
+        return new RegisterUserUseCaseImpl(userRepositoryPort, passwordEncoderPort, tokenProviderPort);
+    }
+
+    // Casos de uso de usuarios
+
+    @Bean
+    public GetUserUseCase getUserUseCase(UserRepositoryPort userRepositoryPort) {
+
+        return new GetUserUseCaseImpl(userRepositoryPort);
+    }
+
+    @Bean
+    public UpdateUserUseCase updateUserUseCase(
+            UserRepositoryPort userRepositoryPort,
+            PlatformTransactionManager transactionManager) {
+
+        return new TransactionalUpdateUserUseCase(
+                new UpdateUserUseCaseImpl(userRepositoryPort),
+                new TransactionTemplate(transactionManager));
+    }
 
 
 
