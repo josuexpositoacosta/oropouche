@@ -1,35 +1,5 @@
 package com.oropouche.tasks.infrastructure.config;
 
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Value;
-
-import com.oropouche.tasks.application.services.TaskServices;
-import com.oropouche.tasks.application.usecases.*;
-import com.oropouche.tasks.domain.ports.in.GetAddicionalTaskInfoUseCase;
-import com.oropouche.tasks.application.services.paciente.PacienteService;
-import com.oropouche.tasks.domain.ports.in.AreaSaludUseCase;
-import com.oropouche.tasks.domain.ports.in.PacienteUseCase;
-import com.oropouche.tasks.domain.ports.out.PacienteRepositoryPort;
-import com.oropouche.tasks.domain.ports.in.GetUserUseCase;
-import com.oropouche.tasks.domain.ports.in.LoginUseCase;
-import com.oropouche.tasks.domain.ports.in.RegisterUserUseCase;
-import com.oropouche.tasks.domain.ports.in.UpdateUserUseCase;
-import com.oropouche.tasks.infrastructure.transaction.TransactionalUpdateUserUseCase;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
-import com.oropouche.tasks.domain.ports.out.AuthenticationPort;
-import com.oropouche.tasks.domain.ports.out.PasswordEncoderPort;
-import com.oropouche.tasks.domain.ports.out.TokenProviderPort;
-import com.oropouche.tasks.domain.ports.out.ExternalServiceTaskPort;
-import com.oropouche.tasks.domain.ports.out.TaskRepositotyPort;
-import com.oropouche.tasks.domain.ports.out.UserRepositoryPort;
-import com.oropouche.tasks.infrastructure.adapters.ExternalServiceTaskAdapter;
-import com.oropouche.tasks.infrastructure.repositories.JpaTaskRepositoryAdapter;
-import com.oropouche.tasks.infrastructure.security.UserDetailsAdapter;
-
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -41,50 +11,36 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.oropouche.tasks.application.services.area_salud.AreaSaludService;
+import com.oropouche.tasks.application.services.paciente.PacienteService;
+import com.oropouche.tasks.application.usecases.GetUserUseCaseImpl;
+import com.oropouche.tasks.application.usecases.LoginUseCaseImpl;
+import com.oropouche.tasks.application.usecases.RegisterUserUseCaseImpl;
+import com.oropouche.tasks.application.usecases.UpdateUserUseCaseImpl;
+import com.oropouche.tasks.domain.ports.in.AreaSaludUseCase;
+import com.oropouche.tasks.domain.ports.in.GetUserUseCase;
+import com.oropouche.tasks.domain.ports.in.LoginUseCase;
+import com.oropouche.tasks.domain.ports.in.PacienteUseCase;
+import com.oropouche.tasks.domain.ports.in.RegisterUserUseCase;
+import com.oropouche.tasks.domain.ports.in.UpdateUserUseCase;
 import com.oropouche.tasks.domain.ports.out.AreaSaludRepositoryPort;
+import com.oropouche.tasks.domain.ports.out.AuthenticationPort;
+import com.oropouche.tasks.domain.ports.out.PacienteRepositoryPort;
+import com.oropouche.tasks.domain.ports.out.PasswordEncoderPort;
+import com.oropouche.tasks.domain.ports.out.TokenProviderPort;
+import com.oropouche.tasks.domain.ports.out.UserRepositoryPort;
+import com.oropouche.tasks.infrastructure.security.UserDetailsAdapter;
+import com.oropouche.tasks.infrastructure.transaction.TransactionalUpdateUserUseCase;
 
+/**
+ * Composición de la aplicación: conecta los casos de uso (Java puro) con sus adaptadores.
+ */
 @Configuration
-@RequiredArgsConstructor
 @EnableJpaRepositories(basePackages = "com.oropouche.tasks.infrastructure.repositories")
 public class ApplicationConfig {
-
-    @Bean
-    public TaskServices taskServices(
-            TaskRepositotyPort taskRepositotyPort,
-            GetAddicionalTaskInfoUseCase getAddicionalTaskInfoUseCase) {
-
-        return new TaskServices(
-                new CreateTaskUseCaseImpl(taskRepositotyPort),
-                new RetrieveTaskUseCaseImpl(taskRepositotyPort),
-                new UpdateTaskUseCaseImpl(taskRepositotyPort),
-                new DeleteTaskUseCaseImpl(taskRepositotyPort),
-                getAddicionalTaskInfoUseCase
-        );
-    }
-
-    @Bean
-    public TaskRepositotyPort taskRepositotyPort(
-            JpaTaskRepositoryAdapter jpaTaskRepositoryAdapter) {
-
-        return jpaTaskRepositoryAdapter;
-    }
-
-    @Bean
-    public GetAddicionalTaskInfoUseCase getAddicionalTaskInfoUseCase(
-            ExternalServiceTaskPort externalServicePort) {
-
-        return new GetAddicionalTaskInfoUseCaseImpl(externalServicePort);
-    }
-
-    @Bean
-    public ExternalServiceTaskPort externalServicePort(
-            RestTemplate restTemplate,
-            @Value("${external.services.jsonplaceholder.base-url}") String baseUrl) {
-
-        return new ExternalServiceTaskAdapter(restTemplate, baseUrl);
-    }
 
     // Áreas de salud y pacientes
 
@@ -102,7 +58,7 @@ public class ApplicationConfig {
         return new PacienteService(pacienteRepositoryPort, areaSaludRepositoryPort);
     }
 
-    // Casos de uso de autenticación (Java puro, se conectan a sus puertos aquí)
+    // Autenticación
 
     @Bean
     public LoginUseCase loginUseCase(
@@ -122,7 +78,7 @@ public class ApplicationConfig {
         return new RegisterUserUseCaseImpl(userRepositoryPort, passwordEncoderPort, tokenProviderPort);
     }
 
-    // Casos de uso de usuarios
+    // Usuarios
 
     @Bean
     public GetUserUseCase getUserUseCase(UserRepositoryPort userRepositoryPort) {
@@ -140,7 +96,7 @@ public class ApplicationConfig {
                 new TransactionTemplate(transactionManager));
     }
 
-
+    // Spring Security
 
     @Bean
     public AuthenticationManager authenticationManager(
@@ -154,9 +110,7 @@ public class ApplicationConfig {
             UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder) {
 
-        DaoAuthenticationProvider authenticationProvider =
-                new DaoAuthenticationProvider();
-
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(userDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder);
 
@@ -169,17 +123,10 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(
-            UserRepositoryPort userRepositoryPort) {
+    public UserDetailsService userDetailsService(UserRepositoryPort userRepositoryPort) {
 
         return username -> userRepositoryPort.findByUsername(username)
                 .map(UserDetailsAdapter::new)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not Found"));
-    }
-
-    @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder.build();
+                .orElseThrow(() -> new UsernameNotFoundException("User not Found"));
     }
 }

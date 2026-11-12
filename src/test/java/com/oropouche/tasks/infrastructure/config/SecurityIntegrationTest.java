@@ -46,18 +46,18 @@ class SecurityIntegrationTest {
         mockMvc.perform(get("/api/v1/pacientes")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/areas-salud")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/user/1")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/tasks")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/areas-salud/activas")).andExpect(status().isUnauthorized());
     }
 
     @Test
     void postSinTokenDebeDevolver401() throws Exception {
-        mockMvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc.perform(post("/api/v1/pacientes").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void tokenMalFormadoDebeDevolver401YNo500() throws Exception {
-        mockMvc.perform(get("/api/tasks").header("Authorization", "Bearer abc.def.ghi"))
+        mockMvc.perform(get("/api/v1/pacientes").header("Authorization", "Bearer abc.def.ghi"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -66,7 +66,7 @@ class SecurityIntegrationTest {
         String ajeno = new JwtService("ZXN0YS1lcy1vdHJhLWNsYXZlLWRpc3RpbnRhLWRlLTMyLWJ5dGVz", 60_000)
                 .getToken(new UserDetailsAdapter(User.builder().username("x").role(Role.USER).build()));
 
-        mockMvc.perform(get("/api/tasks").header("Authorization", "Bearer " + ajeno))
+        mockMvc.perform(get("/api/v1/pacientes").header("Authorization", "Bearer " + ajeno))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -77,7 +77,7 @@ class SecurityIntegrationTest {
                 .getToken(new UserDetailsAdapter(
                         User.builder().username("caducado_user").role(Role.USER).build()));
 
-        mockMvc.perform(get("/api/tasks").header("Authorization", "Bearer " + caducado))
+        mockMvc.perform(get("/api/v1/pacientes").header("Authorization", "Bearer " + caducado))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -86,7 +86,7 @@ class SecurityIntegrationTest {
         String fantasma = jwtService.getToken(new UserDetailsAdapter(
                 User.builder().username("no_existe_en_bd").role(Role.USER).build()));
 
-        mockMvc.perform(get("/api/tasks").header("Authorization", "Bearer " + fantasma))
+        mockMvc.perform(get("/api/v1/pacientes").header("Authorization", "Bearer " + fantasma))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -95,7 +95,7 @@ class SecurityIntegrationTest {
         String token = registrarYObtenerToken("seguridad_ok");
         assertTrue(token.split("\\.").length == 3, "debe ser un JWT");
 
-        mockMvc.perform(get("/api/tasks").header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/v1/pacientes").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
 

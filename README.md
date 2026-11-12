@@ -37,7 +37,7 @@ The main architectural layers are:
 - **Application:** Use cases and application services.
 - **Infrastructure:** REST controllers, persistence adapters, database entities, and security.
 
-The hexagonal architecture is applied across all current modules: tasks, authentication, users, healthcare areas, and patients. The domain and application layers have no dependencies on Spring, JPA, or any other infrastructure technology; frameworks are only used in the infrastructure layer, which is connected to the use cases through ports.
+The hexagonal architecture is applied across all current modules: authentication, users, healthcare areas, and patients. The domain and application layers have no dependencies on Spring, JPA, or any other infrastructure technology; frameworks are only used in the infrastructure layer, which is connected to the use cases through ports.
 
 ### Architecture diagram
 
@@ -48,8 +48,8 @@ flowchart TB
     CLIENT["Client / Frontend"]
 
     subgraph INFRA["Infrastructure Layer"]
-        CTRL["REST controllers + DTOs<br/>Auth · User · AreaSalud · Paciente · Task"]
-        ADAPTERS["Output adapters<br/>JPA repositories · BCrypt · JWT · Spring authentication · External API"]
+        CTRL["REST controllers + DTOs<br/>Auth · User · AreaSalud · Paciente"]
+        ADAPTERS["Output adapters<br/>JPA repositories · BCrypt · JWT · Spring authentication"]
         DB[("MySQL / H2")]
     end
 
@@ -80,7 +80,6 @@ flowchart TB
 | Users | `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Only personal data can be updated (not username, password, or role). |
 | Healthcare areas | `/api/v1/areas-salud` | Create, list (all / active), find by id or code, update, deactivate. |
 | Patients | `/api/v1/pacientes` | Register, list (all / by area), find, update, deactivate. |
-| Tasks | `/api/tasks` | CRUD and additional information from an external service. |
 
 Business rule: a patient can only be assigned to a healthcare area that exists and is active. Records are deactivated, never deleted.
 
@@ -122,7 +121,7 @@ cp application-local.properties.example application-local.properties
 
 The project includes automated tests for use cases, application services, persistence adapters, REST controllers, and security rules (integration tests with H2).
 
-Latest recorded validation: **76 tests executed, with no failures or errors.**
+Latest recorded validation: **54 tests executed, with no failures or errors.**
 
 ### Project status
 
@@ -173,7 +172,7 @@ Las principales capas arquitectónicas son:
 - **Aplicación:** Casos de uso y servicios de aplicación.
 - **Infraestructura:** Controladores REST, adaptadores de persistencia, entidades de base de datos y seguridad.
 
-La arquitectura hexagonal está aplicada en todos los módulos actuales: tareas, autenticación, usuarios, áreas de salud y pacientes. Las capas de dominio y aplicación no dependen de Spring, JPA ni de ninguna otra tecnología de infraestructura; los frameworks solo se usan en la capa de infraestructura, que se conecta con los casos de uso a través de puertos.
+La arquitectura hexagonal está aplicada en todos los módulos actuales: autenticación, usuarios, áreas de salud y pacientes. Las capas de dominio y aplicación no dependen de Spring, JPA ni de ninguna otra tecnología de infraestructura; los frameworks solo se usan en la capa de infraestructura, que se conecta con los casos de uso a través de puertos.
 
 ### Diagrama de arquitectura
 
@@ -184,8 +183,8 @@ flowchart TB
     CLIENT["Cliente / Frontend"]
 
     subgraph INFRA["Capa de Infraestructura"]
-        CTRL["Controladores REST + DTOs<br/>Auth · User · AreaSalud · Paciente · Task"]
-        ADAPTERS["Adaptadores de salida<br/>Repositorios JPA · BCrypt · JWT · Autenticación Spring · API externa"]
+        CTRL["Controladores REST + DTOs<br/>Auth · User · AreaSalud · Paciente"]
+        ADAPTERS["Adaptadores de salida<br/>Repositorios JPA · BCrypt · JWT · Autenticación Spring"]
         DB[("MySQL / H2")]
     end
 
@@ -216,7 +215,6 @@ flowchart TB
 | Usuarios | `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Solo se actualizan los datos personales (no el usuario, la contraseña ni el rol). |
 | Áreas de salud | `/api/v1/areas-salud` | Crear, listar (todas / activas), buscar por id o código, actualizar, desactivar. |
 | Pacientes | `/api/v1/pacientes` | Registrar, listar (todos / por área), buscar, actualizar, desactivar. |
-| Tareas | `/api/tasks` | CRUD e información adicional desde un servicio externo. |
 
 Regla de negocio: un paciente solo puede asignarse a un área de salud existente y activa. Los registros se desactivan, nunca se eliminan.
 
@@ -258,7 +256,7 @@ cp application-local.properties.example application-local.properties
 
 El proyecto dispone de pruebas automatizadas para casos de uso, servicios de aplicación, adaptadores de persistencia, controladores REST y reglas de seguridad (pruebas de integración con H2).
 
-Última validación registrada: **76 pruebas ejecutadas, sin fallos ni errores.**
+Última validación registrada: **54 pruebas ejecutadas, sin fallos ni errores.**
 
 ### Estado del proyecto
 
