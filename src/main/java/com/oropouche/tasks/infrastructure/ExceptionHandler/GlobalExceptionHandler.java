@@ -6,7 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.oropouche.tasks.domain.exceptions.InvalidCredentialsException;
 import com.oropouche.tasks.domain.exceptions.RecursoNoEncontradoException;
@@ -56,6 +58,23 @@ public class GlobalExceptionHandler {
         LOGGER.warn("Violación de integridad de datos: {}", ex.getMostSpecificCause().getMessage());
         return new ResponseEntity<String>("El recurso ya existe o viola una restricción de datos",
                 HttpStatus.CONFLICT);
+    }
+
+    /** JSON mal formado o con valores no válidos (por ejemplo, una clasificación inexistente). */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<String> handlerMensajeIlegible(HttpMessageNotReadableException ex)
+    {
+        return new ResponseEntity<String>(
+                "El cuerpo de la petición no es válido: revise el formato y los valores permitidos",
+                HttpStatus.BAD_REQUEST);
+    }
+
+    /** Parámetro de URL con un tipo o valor no válido (por ejemplo, ?clasificacion=XYZ). */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<String> handlerParametroInvalido(MethodArgumentTypeMismatchException ex)
+    {
+        return new ResponseEntity<String>("Valor no válido para el parámetro: " + ex.getName(),
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(RuntimeException.class)

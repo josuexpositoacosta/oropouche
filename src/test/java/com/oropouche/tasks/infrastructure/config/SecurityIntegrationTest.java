@@ -46,6 +46,7 @@ class SecurityIntegrationTest {
         mockMvc.perform(get("/api/v1/pacientes")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/areas-salud")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/user/1")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/casos")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/areas-salud/activas")).andExpect(status().isUnauthorized());
     }
 

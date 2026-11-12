@@ -1,5 +1,7 @@
 package com.oropouche.tasks.infrastructure.config;
 
+import java.time.Clock;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -15,6 +17,12 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.oropouche.tasks.application.services.area_salud.AreaSaludService;
+import com.oropouche.tasks.application.services.caso.CasoService;
+import com.oropouche.tasks.domain.models.caso.ClasificadorOPS;
+import com.oropouche.tasks.domain.models.caso.DefinicionCaso;
+import com.oropouche.tasks.domain.ports.in.CasoUseCase;
+import com.oropouche.tasks.domain.ports.out.CasoRepositoryPort;
+import com.oropouche.tasks.domain.ports.out.UsuarioActualPort;
 import com.oropouche.tasks.application.services.paciente.PacienteService;
 import com.oropouche.tasks.application.usecases.GetUserUseCaseImpl;
 import com.oropouche.tasks.application.usecases.LoginUseCaseImpl;
@@ -56,6 +64,30 @@ public class ApplicationConfig {
             AreaSaludRepositoryPort areaSaludRepositoryPort) {
 
         return new PacienteService(pacienteRepositoryPort, areaSaludRepositoryPort);
+    }
+
+    // Casos de Oropouche
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemDefaultZone();
+    }
+
+    /** Definición de caso vigente. Para usar una definición nacional, sustituir esta bean. */
+    @Bean
+    public DefinicionCaso definicionCaso() {
+        return new ClasificadorOPS();
+    }
+
+    @Bean
+    public CasoUseCase casoUseCase(
+            CasoRepositoryPort casoRepositoryPort,
+            PacienteRepositoryPort pacienteRepositoryPort,
+            UsuarioActualPort usuarioActualPort,
+            DefinicionCaso definicionCaso,
+            Clock clock) {
+
+        return new CasoService(casoRepositoryPort, pacienteRepositoryPort, usuarioActualPort, definicionCaso, clock);
     }
 
     // Autenticación
