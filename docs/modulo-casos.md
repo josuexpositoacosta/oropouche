@@ -140,10 +140,9 @@ infrastructure/          CasoEntity (+ resultados e historial en cascada), JpaCa
                          CasoController + DTOs
 ```
 
-## 7. Pendiente en fases posteriores
+## 7. Fases siguientes
 
-- Evaluación clínica detallada (signos vitales, signos de alarma), dictámenes y planes de atención.
-- Seguimientos y cierre del caso con desenlace.
-- Roles (ADMIN, MEDICO, EPIDEMIOLOGO) y visibilidad por área.
-- Transmisión vertical.
-- Estadísticas de vigilancia.
+- Atención clínica, seguimiento y cierre: implementado, ver [modulo-clinico.md](modulo-clinico.md).
+- Pendiente: roles (ADMIN, MEDICO, EPIDEMIOLOGO) y visibilidad por área.
+- Pendiente: transmisión vertical.
+- Pendiente: estadísticas de vigilancia.

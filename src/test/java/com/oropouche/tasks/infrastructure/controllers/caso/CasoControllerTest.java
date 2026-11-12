@@ -70,7 +70,8 @@ class CasoControllerTest {
         c.setManifestaciones(EnumSet.of(Manifestacion.MAREOS, Manifestacion.ESCALOFRIOS));
         c.setClasificacion(actual);
         c.setEstado(EstadoCaso.ABIERTO);
-        return new EvaluacionCaso(c, new ResultadoClasificacion(Optional.ofNullable(sugerida), List.of("Cefalea intensa")));
+        return new EvaluacionCaso(c, new ResultadoClasificacion(Optional.ofNullable(sugerida), List.of("Cefalea intensa")),
+                List.of());
     }
 
     @Test

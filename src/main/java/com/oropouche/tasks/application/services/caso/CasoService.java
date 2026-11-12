@@ -2,7 +2,6 @@ package com.oropouche.tasks.application.services.caso;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +21,8 @@ import com.oropouche.tasks.domain.ports.out.CasoRepositoryPort;
 import com.oropouche.tasks.domain.ports.out.PacienteRepositoryPort;
 import com.oropouche.tasks.domain.ports.out.UsuarioActualPort;
 
+import static com.oropouche.tasks.application.services.caso.CasoSoporte.esBlanco;
+
 /**
  * Casos de uso del módulo de casos. Java puro: no depende de ningún framework.
  */
@@ -33,7 +34,7 @@ public class CasoService implements CasoUseCase {
     private final PacienteRepositoryPort pacienteRepositoryPort;
     private final UsuarioActualPort usuarioActualPort;
     private final DefinicionCaso definicionCaso;
-    private final Clock clock;
+    private final CasoSoporte soporte;
 
     public CasoService(
             CasoRepositoryPort casoRepositoryPort,
@@ -46,7 +47,7 @@ public class CasoService implements CasoUseCase {
         this.pacienteRepositoryPort = pacienteRepositoryPort;
         this.usuarioActualPort = usuarioActualPort;
         this.definicionCaso = definicionCaso;
-        this.clock = clock;
+        this.soporte = new CasoSoporte(casoRepositoryPort, definicionCaso, clock);
     }
 
     @Override
@@ -72,7 +73,7 @@ public class CasoService implements CasoUseCase {
         }
 
         if (datos.getFechaNotificacion() == null) {
-            datos.setFechaNotificacion(hoy());
+            datos.setFechaNotificacion(soporte.hoy());
         }
         validarDatosClinicos(datos);
 
@@ -104,18 +105,18 @@ public class CasoService implements CasoUseCase {
         caso.setClasificacion(inicial);
         caso.getHistorial().add(cambio(null, inicial, motivoInicial));
 
-        return evaluar(casoRepositoryPort.save(caso));
+        return soporte.guardarYEvaluar(caso);
     }
 
     @Override
     public EvaluacionCaso buscarPorId(Long id) {
-        return evaluar(obtener(id));
+        return soporte.evaluar(soporte.obtener(id));
     }
 
     @Override
     public List<EvaluacionCaso> listar(Long areaSaludId, Clasificacion clasificacion, EstadoCaso estado) {
         return casoRepositoryPort.findAll(areaSaludId, clasificacion, estado).stream()
-                .map(this::evaluar)
+                .map(soporte::evaluar)
                 .collect(Collectors.toList());
     }
 
@@ -127,14 +128,14 @@ public class CasoService implements CasoUseCase {
         }
 
         return casoRepositoryPort.findByPacienteId(pacienteId).stream()
-                .map(this::evaluar)
+                .map(soporte::evaluar)
                 .collect(Collectors.toList());
     }
 
     @Override
     public EvaluacionCaso actualizar(Long id, Caso datos) {
 
-        Caso caso = obtenerAbierto(id);
+        Caso caso = soporte.obtenerAbierto(id);
 
         if (datos == null) {
             throw new IllegalArgumentException("Los datos del caso son obligatorios");
@@ -145,25 +146,25 @@ public class CasoService implements CasoUseCase {
         validarDatosClinicos(datos);
         copiarDatosClinicos(datos, caso);
 
-        return evaluar(casoRepositoryPort.save(caso));
+        return soporte.guardarYEvaluar(caso);
     }
 
     @Override
     public EvaluacionCaso registrarResultado(Long casoId, ResultadoLaboratorio resultado) {
 
-        Caso caso = obtenerAbierto(casoId);
+        Caso caso = soporte.obtenerAbierto(casoId);
         validarResultado(resultado);
 
         resultado.setId(null);
         caso.getResultados().add(resultado);
 
-        return evaluar(casoRepositoryPort.save(caso));
+        return soporte.guardarYEvaluar(caso);
     }
 
     @Override
     public EvaluacionCaso cambiarClasificacion(Long casoId, Clasificacion nueva, String motivo) {
 
-        Caso caso = obtenerAbierto(casoId);
+        Caso caso = soporte.obtenerAbierto(casoId);
 
         if (nueva == null) {
             throw new IllegalArgumentException("La nueva clasificación es obligatoria");
@@ -186,42 +187,17 @@ public class CasoService implements CasoUseCase {
         caso.getHistorial().add(cambio(caso.getClasificacion(), nueva, motivo.trim()));
         caso.setClasificacion(nueva);
 
-        return evaluar(casoRepositoryPort.save(caso));
-    }
-
-    private Caso obtener(Long id) {
-
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("El identificador del caso no es válido");
-        }
-
-        return casoRepositoryPort.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el caso con ID: " + id));
-    }
-
-    private Caso obtenerAbierto(Long id) {
-
-        Caso caso = obtener(id);
-
-        if (!caso.estaAbierto()) {
-            throw new IllegalArgumentException("El caso está cerrado y no admite cambios");
-        }
-
-        return caso;
-    }
-
-    private EvaluacionCaso evaluar(Caso caso) {
-        return new EvaluacionCaso(caso, definicionCaso.evaluar(caso));
+        return soporte.guardarYEvaluar(caso);
     }
 
     private CambioClasificacion cambio(Clasificacion anterior, Clasificacion nueva, String motivo) {
         return new CambioClasificacion(
-                null, LocalDateTime.now(clock), anterior, nueva, motivo, usuarioActualPort.username());
+                null, soporte.ahora(), anterior, nueva, motivo, usuarioActualPort.username());
     }
 
     private void validarDatosClinicos(Caso datos) {
 
-        LocalDate hoy = hoy();
+        LocalDate hoy = soporte.hoy();
 
         if (datos.getFechaInicioSintomas() == null) {
             throw new IllegalArgumentException("La fecha de inicio de síntomas es obligatoria");
@@ -258,7 +234,7 @@ public class CasoService implements CasoUseCase {
             throw new IllegalArgumentException("La fecha de toma de la muestra es obligatoria");
         }
 
-        LocalDate hoy = hoy();
+        LocalDate hoy = soporte.hoy();
         if (resultado.getFechaToma().isAfter(hoy)
                 || (resultado.getFechaResultado() != null && resultado.getFechaResultado().isAfter(hoy))) {
             throw new IllegalArgumentException("Las fechas del resultado no pueden ser futuras");
@@ -283,11 +259,4 @@ public class CasoService implements CasoUseCase {
         destino.setNexoCasoConfirmado(origen.isNexoCasoConfirmado());
     }
 
-    private LocalDate hoy() {
-        return LocalDate.now(clock);
-    }
-
-    private static boolean esBlanco(String valor) {
-        return valor == null || valor.trim().isEmpty();
-    }
 }

@@ -17,7 +17,12 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.oropouche.tasks.application.services.area_salud.AreaSaludService;
+import com.oropouche.tasks.application.services.caso.AtencionClinicaService;
 import com.oropouche.tasks.application.services.caso.CasoService;
+import com.oropouche.tasks.application.services.caso.DesenlaceService;
+import com.oropouche.tasks.domain.ports.in.AtencionClinicaUseCase;
+import com.oropouche.tasks.domain.ports.in.DesenlaceUseCase;
+import com.oropouche.tasks.domain.ports.out.DesenlaceRepositoryPort;
 import com.oropouche.tasks.domain.models.caso.ClasificadorOPS;
 import com.oropouche.tasks.domain.models.caso.DefinicionCaso;
 import com.oropouche.tasks.domain.ports.in.CasoUseCase;
@@ -88,6 +93,24 @@ public class ApplicationConfig {
             Clock clock) {
 
         return new CasoService(casoRepositoryPort, pacienteRepositoryPort, usuarioActualPort, definicionCaso, clock);
+    }
+
+    @Bean
+    public AtencionClinicaUseCase atencionClinicaUseCase(
+            CasoRepositoryPort casoRepositoryPort,
+            DesenlaceRepositoryPort desenlaceRepositoryPort,
+            UsuarioActualPort usuarioActualPort,
+            DefinicionCaso definicionCaso,
+            Clock clock) {
+
+        return new AtencionClinicaService(
+                casoRepositoryPort, desenlaceRepositoryPort, usuarioActualPort, definicionCaso, clock);
+    }
+
+    @Bean
+    public DesenlaceUseCase desenlaceUseCase(DesenlaceRepositoryPort desenlaceRepositoryPort) {
+
+        return new DesenlaceService(desenlaceRepositoryPort);
     }
 
     // Autenticación

@@ -1,5 +1,6 @@
 package com.oropouche.tasks.infrastructure.adapters.caso;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
@@ -11,6 +12,17 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import com.oropouche.tasks.domain.models.caso.AgenteEtiologico;
+import com.oropouche.tasks.domain.models.caso.Desenlace;
+import com.oropouche.tasks.domain.models.caso.Dictamen;
+import com.oropouche.tasks.domain.models.caso.EvaluacionClinica;
+import com.oropouche.tasks.domain.models.caso.EventoCaso;
+import com.oropouche.tasks.domain.models.caso.EvolucionCaso;
+import com.oropouche.tasks.domain.models.caso.ModalidadAtencion;
+import com.oropouche.tasks.domain.models.caso.PlanAtencion;
+import com.oropouche.tasks.domain.models.caso.Seguimiento;
+import com.oropouche.tasks.domain.models.caso.SignoAlarmaDengue;
+import com.oropouche.tasks.domain.models.caso.SignoClinico;
+import com.oropouche.tasks.domain.models.caso.TipoEventoCaso;
 import com.oropouche.tasks.domain.models.caso.CambioClasificacion;
 import com.oropouche.tasks.domain.models.caso.Caso;
 import com.oropouche.tasks.domain.models.caso.Clasificacion;
@@ -25,7 +37,7 @@ import com.oropouche.tasks.infrastructure.repositories.caso.JpaCasoRepository;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@Import(JpaCasoRepositoryAdapter.class)
+@Import({JpaCasoRepositoryAdapter.class, JpaDesenlaceRepositoryAdapter.class})
 class JpaCasoRepositoryAdapterTest {
 
     @Autowired
@@ -33,6 +45,9 @@ class JpaCasoRepositoryAdapterTest {
 
     @Autowired
     private JpaCasoRepository jpaRepository;
+
+    @Autowired
+    private JpaDesenlaceRepositoryAdapter desenlaceAdapter;
 
     @BeforeEach
     void setUp() {
@@ -119,5 +134,48 @@ class JpaCasoRepositoryAdapterTest {
         assertTrue(adapter.existsAbiertoByPacienteId(1L));
         assertFalse(adapter.existsAbiertoByPacienteId(2L), "un caso cerrado no cuenta");
         assertEquals(1, adapter.findByPacienteId(2L).size());
+    }
+
+    @Test
+    void debeGuardarRegistrosClinicosDesenlaceYEventos() {
+
+        Desenlace recuperado = desenlaceAdapter.save(new Desenlace(null, "RECUPERADO", "Recuperado", true));
+        Caso caso = adapter.save(caso(1L, 10L, Clasificacion.SOSPECHOSO, EstadoCaso.ABIERTO));
+
+        EvaluacionClinica evaluacion = new EvaluacionClinica();
+        evaluacion.setFecha(LocalDateTime.of(2026, 11, 4, 9, 0));
+        evaluacion.setTemperatura(new BigDecimal("38.7"));
+        evaluacion.setTensionSistolica(110);
+        evaluacion.setTensionDiastolica(70);
+        evaluacion.setSignosClinicos(EnumSet.of(SignoClinico.POSTRACION, SignoClinico.EPISTAXIS));
+        evaluacion.setSignosAlarmaDengue(EnumSet.of(SignoAlarmaDengue.VOMITOS_PERSISTENTES));
+        evaluacion.setUsuario("dr.lopez");
+        caso.getEvaluaciones().add(evaluacion);
+        caso.getDictamenes().add(new Dictamen(null, LocalDateTime.of(2026, 11, 4, 9, 30),
+                "Fiebre de Oropouche", "Dengue", "Cuadro compatible", "dr.lopez"));
+        caso.getPlanes().add(new PlanAtencion(null, LocalDateTime.of(2026, 11, 4, 9, 40),
+                ModalidadAtencion.AMBULATORIO, "Reposo e hidratación", LocalDate.of(2026, 11, 7), "dr.lopez"));
+        caso.getSeguimientos().add(new Seguimiento(null, LocalDateTime.of(2026, 11, 7, 9, 0),
+                EvolucionCaso.MEJORIA, "Afebril", null, "dr.lopez"));
+        caso.setEstado(EstadoCaso.CERRADO);
+        caso.setDesenlace(recuperado);
+        caso.setFechaCierre(LocalDate.of(2026, 11, 10));
+        caso.getEventos().add(new EventoCaso(null, LocalDateTime.of(2026, 11, 10, 9, 0),
+                TipoEventoCaso.CIERRE, "Desenlace: Recuperado", "dr.lopez"));
+        adapter.save(caso);
+
+        Caso leido = adapter.findById(caso.getId()).orElseThrow();
+
+        EvaluacionClinica ev = leido.getEvaluaciones().get(0);
+        assertEquals(0, new BigDecimal("38.7").compareTo(ev.getTemperatura()));
+        assertEquals(EnumSet.of(SignoClinico.POSTRACION, SignoClinico.EPISTAXIS), ev.getSignosClinicos());
+        assertEquals(EnumSet.of(SignoAlarmaDengue.VOMITOS_PERSISTENTES), ev.getSignosAlarmaDengue());
+        assertEquals("Cuadro compatible", leido.getDictamenes().get(0).getConclusion());
+        assertEquals(LocalDate.of(2026, 11, 7), leido.getPlanes().get(0).getProximoControl());
+        assertEquals(EvolucionCaso.MEJORIA, leido.getSeguimientos().get(0).getEvolucion());
+        assertEquals("RECUPERADO", leido.getDesenlace().getCodigo());
+        assertEquals(LocalDate.of(2026, 11, 10), leido.getFechaCierre());
+        assertEquals(TipoEventoCaso.CIERRE, leido.getEventos().get(0).getTipo());
+        assertEquals(1, leido.getHistorial().size(), "el historial de clasificación se conserva");
     }
 }
