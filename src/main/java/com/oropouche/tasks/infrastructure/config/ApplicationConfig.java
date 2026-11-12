@@ -16,7 +16,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.oropouche.tasks.application.services.acceso.AtencionClinicaUseCaseConAcceso;
+import com.oropouche.tasks.application.services.acceso.CasoUseCaseConAcceso;
+import com.oropouche.tasks.application.services.acceso.PacienteUseCaseConAcceso;
+import com.oropouche.tasks.application.services.acceso.PoliticaAcceso;
+import com.oropouche.tasks.application.services.acceso.UsuarioPropioConAcceso;
 import com.oropouche.tasks.application.services.area_salud.AreaSaludService;
+import com.oropouche.tasks.application.services.user.GestionUsuariosService;
+import com.oropouche.tasks.domain.ports.in.GestionUsuariosUseCase;
 import com.oropouche.tasks.application.services.caso.AtencionClinicaService;
 import com.oropouche.tasks.application.services.caso.CasoService;
 import com.oropouche.tasks.application.services.caso.DesenlaceService;
@@ -31,14 +38,10 @@ import com.oropouche.tasks.domain.ports.out.UsuarioActualPort;
 import com.oropouche.tasks.application.services.paciente.PacienteService;
 import com.oropouche.tasks.application.usecases.GetUserUseCaseImpl;
 import com.oropouche.tasks.application.usecases.LoginUseCaseImpl;
-import com.oropouche.tasks.application.usecases.RegisterUserUseCaseImpl;
 import com.oropouche.tasks.application.usecases.UpdateUserUseCaseImpl;
 import com.oropouche.tasks.domain.ports.in.AreaSaludUseCase;
-import com.oropouche.tasks.domain.ports.in.GetUserUseCase;
 import com.oropouche.tasks.domain.ports.in.LoginUseCase;
 import com.oropouche.tasks.domain.ports.in.PacienteUseCase;
-import com.oropouche.tasks.domain.ports.in.RegisterUserUseCase;
-import com.oropouche.tasks.domain.ports.in.UpdateUserUseCase;
 import com.oropouche.tasks.domain.ports.out.AreaSaludRepositoryPort;
 import com.oropouche.tasks.domain.ports.out.AuthenticationPort;
 import com.oropouche.tasks.domain.ports.out.PacienteRepositoryPort;
@@ -55,6 +58,13 @@ import com.oropouche.tasks.infrastructure.transaction.TransactionalUpdateUserUse
 @EnableJpaRepositories(basePackages = "com.oropouche.tasks.infrastructure.repositories")
 public class ApplicationConfig {
 
+    // Política de acceso por rol y área (Java puro)
+
+    @Bean
+    public PoliticaAcceso politicaAcceso(UsuarioActualPort usuarioActualPort) {
+        return new PoliticaAcceso(usuarioActualPort);
+    }
+
     // Áreas de salud y pacientes
 
     @Bean
@@ -66,9 +76,12 @@ public class ApplicationConfig {
     @Bean
     public PacienteUseCase pacienteUseCase(
             PacienteRepositoryPort pacienteRepositoryPort,
-            AreaSaludRepositoryPort areaSaludRepositoryPort) {
+            AreaSaludRepositoryPort areaSaludRepositoryPort,
+            PoliticaAcceso politicaAcceso) {
 
-        return new PacienteService(pacienteRepositoryPort, areaSaludRepositoryPort);
+        return new PacienteUseCaseConAcceso(
+                new PacienteService(pacienteRepositoryPort, areaSaludRepositoryPort),
+                pacienteRepositoryPort, politicaAcceso);
     }
 
     // Casos de Oropouche
@@ -90,9 +103,12 @@ public class ApplicationConfig {
             PacienteRepositoryPort pacienteRepositoryPort,
             UsuarioActualPort usuarioActualPort,
             DefinicionCaso definicionCaso,
-            Clock clock) {
+            Clock clock,
+            PoliticaAcceso politicaAcceso) {
 
-        return new CasoService(casoRepositoryPort, pacienteRepositoryPort, usuarioActualPort, definicionCaso, clock);
+        return new CasoUseCaseConAcceso(
+                new CasoService(casoRepositoryPort, pacienteRepositoryPort, usuarioActualPort, definicionCaso, clock),
+                casoRepositoryPort, pacienteRepositoryPort, politicaAcceso);
     }
 
     @Bean
@@ -101,10 +117,13 @@ public class ApplicationConfig {
             DesenlaceRepositoryPort desenlaceRepositoryPort,
             UsuarioActualPort usuarioActualPort,
             DefinicionCaso definicionCaso,
-            Clock clock) {
+            Clock clock,
+            PoliticaAcceso politicaAcceso) {
 
-        return new AtencionClinicaService(
-                casoRepositoryPort, desenlaceRepositoryPort, usuarioActualPort, definicionCaso, clock);
+        return new AtencionClinicaUseCaseConAcceso(
+                new AtencionClinicaService(
+                        casoRepositoryPort, desenlaceRepositoryPort, usuarioActualPort, definicionCaso, clock),
+                casoRepositoryPort, politicaAcceso);
     }
 
     @Bean
@@ -113,7 +132,7 @@ public class ApplicationConfig {
         return new DesenlaceService(desenlaceRepositoryPort);
     }
 
-    // Autenticación
+    // Autenticación y usuarios
 
     @Bean
     public LoginUseCase loginUseCase(
@@ -125,30 +144,32 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public RegisterUserUseCase registerUserUseCase(
+    public GestionUsuariosUseCase gestionUsuariosUseCase(
             UserRepositoryPort userRepositoryPort,
             PasswordEncoderPort passwordEncoderPort,
-            TokenProviderPort tokenProviderPort) {
+            AreaSaludRepositoryPort areaSaludRepositoryPort,
+            UsuarioActualPort usuarioActualPort) {
 
-        return new RegisterUserUseCaseImpl(userRepositoryPort, passwordEncoderPort, tokenProviderPort);
+        return new GestionUsuariosService(
+                userRepositoryPort, passwordEncoderPort, areaSaludRepositoryPort, usuarioActualPort);
     }
 
-    // Usuarios
-
+    /**
+     * Datos personales propios: una sola bean que implementa GetUserUseCase, UpdateUserUseCase y
+     * PerfilActualUseCase, con la regla "cada usuario solo los suyos" (salvo el ADMIN).
+     */
     @Bean
-    public GetUserUseCase getUserUseCase(UserRepositoryPort userRepositoryPort) {
-
-        return new GetUserUseCaseImpl(userRepositoryPort);
-    }
-
-    @Bean
-    public UpdateUserUseCase updateUserUseCase(
+    public UsuarioPropioConAcceso usuarioPropioUseCase(
             UserRepositoryPort userRepositoryPort,
-            PlatformTransactionManager transactionManager) {
+            PlatformTransactionManager transactionManager,
+            PoliticaAcceso politicaAcceso) {
 
-        return new TransactionalUpdateUserUseCase(
-                new UpdateUserUseCaseImpl(userRepositoryPort),
-                new TransactionTemplate(transactionManager));
+        return new UsuarioPropioConAcceso(
+                new GetUserUseCaseImpl(userRepositoryPort),
+                new TransactionalUpdateUserUseCase(
+                        new UpdateUserUseCaseImpl(userRepositoryPort),
+                        new TransactionTemplate(transactionManager)),
+                politicaAcceso);
     }
 
     // Spring Security

@@ -115,7 +115,7 @@ control, los eventos y las **alertas**.
 | `PUT` | `/api/v1/desenlaces/{id}` | Renombrar `{nombre}` |
 | `PATCH` | `/api/v1/desenlaces/{id}/activar` · `/desactivar` | Activar o desactivar |
 
-En la fase de roles, la gestión del catálogo quedará reservada al ADMIN y los registros clínicos al MEDICO.
+La gestión del catálogo está reservada al ADMIN y los registros clínicos al MEDICO de cada área (ver [roles-y-acceso.md](roles-y-acceso.md)).
 
 ---
 

@@ -98,6 +98,9 @@ public class CasoEntity {
     @Column(nullable = false, length = 20)
     private Clasificacion clasificacion;
 
+    @Column(name = "clasificacion_validada", nullable = false)
+    private boolean clasificacionValidada;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoCaso estado;
@@ -164,6 +167,7 @@ public class CasoEntity {
         e.setDetalleAreaTransmision(caso.getDetalleAreaTransmision());
         e.setNexoCasoConfirmado(caso.isNexoCasoConfirmado());
         e.setClasificacion(caso.getClasificacion());
+        e.setClasificacionValidada(caso.isClasificacionValidada());
         e.setEstado(caso.getEstado());
         e.setResultados(caso.getResultados().stream()
                 .map(ResultadoLaboratorioEntity::fromDomainModel)
@@ -201,6 +205,7 @@ public class CasoEntity {
         caso.setDetalleAreaTransmision(detalleAreaTransmision);
         caso.setNexoCasoConfirmado(nexoCasoConfirmado);
         caso.setClasificacion(clasificacion);
+        caso.setClasificacionValidada(clasificacionValidada);
         caso.setEstado(estado);
         caso.setResultados(resultados.stream()
                 .map(ResultadoLaboratorioEntity::toDomainModel)

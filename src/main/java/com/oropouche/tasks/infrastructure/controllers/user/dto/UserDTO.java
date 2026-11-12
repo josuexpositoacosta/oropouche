@@ -1,5 +1,7 @@
 package com.oropouche.tasks.infrastructure.controllers.user.dto;
 
+import com.oropouche.tasks.domain.models.user.Role;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +17,6 @@ public class UserDTO {
     String firstname;
     String lastname;
     String country;
+    Role role;
+    Long areaSaludId;
 }

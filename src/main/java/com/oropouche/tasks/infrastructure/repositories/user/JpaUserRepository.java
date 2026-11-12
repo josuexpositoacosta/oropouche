@@ -1,6 +1,10 @@
 
 package com.oropouche.tasks.infrastructure.repositories.user;
 
+import java.util.List;
+
+import com.oropouche.tasks.domain.models.user.Role;
+
 import com.oropouche.tasks.infrastructure.entities.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,4 +14,8 @@ public interface JpaUserRepository
         extends JpaRepository<UserEntity, Integer> {
 
     Optional<UserEntity> findByUsername(String username);
+
+    List<UserEntity> findAllByOrderByIdAsc();
+
+    long countByRoleAndActivoTrue(Role role);
 }

@@ -40,7 +40,7 @@ class JpaUserRepositoryAdapterTest {
                 .firstname("Test")
                 .lastname("User")
                 .country("Cuba")
-                .role(Role.USER)
+                .role(Role.MEDICO)
                 .build();
 
         User savedUser = userRepositoryAdapter.save(user);
@@ -50,7 +50,7 @@ class JpaUserRepositoryAdapterTest {
         assertEquals("Test", savedUser.getFirstname());
         assertEquals("User", savedUser.getLastname());
         assertEquals("Cuba", savedUser.getCountry());
-        assertEquals(Role.USER, savedUser.getRole());
+        assertEquals(Role.MEDICO, savedUser.getRole());
 
         assertTrue(jpaUserRepository.existsById(savedUser.getId()));
     }
@@ -64,7 +64,7 @@ class JpaUserRepositoryAdapterTest {
                 .firstname("Find")
                 .lastname("ById")
                 .country("Cuba")
-                .role(Role.USER)
+                .role(Role.MEDICO)
                 .build();
 
         UserEntity savedEntity = jpaUserRepository.save(entity);
@@ -91,7 +91,7 @@ class JpaUserRepositoryAdapterTest {
                 .firstname("Find")
                 .lastname("ByUsername")
                 .country("Cuba")
-                .role(Role.USER)
+                .role(Role.MEDICO)
                 .build();
 
         jpaUserRepository.save(entity);

@@ -1,5 +1,6 @@
 package com.oropouche.tasks.infrastructure.config;
 
+import com.oropouche.tasks.domain.models.user.Role;
 import com.oropouche.tasks.infrastructure.jwt.JwtAuthenticationFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -26,8 +27,13 @@ public class SecurityConfig {
         this.authProvider = authProvider;
     }
 
+    private static final String ADMIN = Role.ADMIN.name();
+    private static final String MEDICO = Role.MEDICO.name();
+    private static final String EPIDEMIOLOGO = Role.EPIDEMIOLOGO.name();
+
     /**
-     * Todas las rutas requieren JWT excepto el login/registro y las peticiones CORS preflight.
+     * Reglas por rol (primer nivel). El acceso por área de salud se aplica después, en la capa de
+     * aplicación (PoliticaAcceso). Todo requiere JWT excepto el login y las peticiones CORS preflight.
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,7 +42,20 @@ public class SecurityConfig {
             .authorizeHttpRequests(authRequest -> authRequest
                 .antMatchers(HttpMethod.OPTIONS).permitAll()
                 .antMatchers("/auth/**").permitAll()
-                .anyRequest().authenticated())
+                // Administración de usuarios
+                .antMatchers("/api/v1/admin/**").hasAuthority(ADMIN)
+                // Catálogos: los lee cualquier usuario; los gestiona el ADMIN
+                .antMatchers(HttpMethod.GET, "/api/v1/areas-salud/**", "/api/v1/desenlaces/**").authenticated()
+                .antMatchers("/api/v1/areas-salud/**", "/api/v1/desenlaces/**").hasAuthority(ADMIN)
+                // Datos clínicos: los leen médico y epidemiólogo; los escribe el médico
+                .antMatchers(HttpMethod.PATCH, "/api/v1/casos/*/clasificacion/validacion").hasAuthority(EPIDEMIOLOGO)
+                .antMatchers(HttpMethod.PATCH, "/api/v1/casos/*/clasificacion").hasAnyAuthority(MEDICO, EPIDEMIOLOGO)
+                .antMatchers(HttpMethod.GET, "/api/v1/pacientes/**", "/api/v1/casos/**")
+                    .hasAnyAuthority(MEDICO, EPIDEMIOLOGO)
+                .antMatchers("/api/v1/pacientes/**", "/api/v1/casos/**").hasAuthority(MEDICO)
+                // Datos personales propios (la regla "solo los suyos" está en la capa de aplicación)
+                .antMatchers("/api/v1/user/**").authenticated()
+                .anyRequest().denyAll())
             .exceptionHandling(exceptions -> exceptions
                 // Sin token o con token inválido: 401 (no autenticado) en lugar de 403
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

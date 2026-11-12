@@ -178,4 +178,37 @@ class JpaCasoRepositoryAdapterTest {
         assertEquals(TipoEventoCaso.CIERRE, leido.getEventos().get(0).getTipo());
         assertEquals(1, leido.getHistorial().size(), "el historial de clasificación se conserva");
     }
+
+    @Test
+    void todosLosValoresDeLosEnumeradosCabenEnSusColumnas() {
+
+        Caso caso = adapter.save(caso(9L, 10L, Clasificacion.SOSPECHOSO, EstadoCaso.ABIERTO));
+        for (TipoEventoCaso tipo : TipoEventoCaso.values()) {
+            caso.getEventos().add(new EventoCaso(null, LocalDateTime.of(2026, 11, 12, 9, 0), tipo, "x", "u"));
+        }
+        caso.setManifestaciones(EnumSet.allOf(Manifestacion.class));
+        EvaluacionClinica evaluacion = new EvaluacionClinica();
+        evaluacion.setFecha(LocalDateTime.of(2026, 11, 12, 9, 0));
+        evaluacion.setUsuario("u");
+        evaluacion.setSignosClinicos(EnumSet.allOf(SignoClinico.class));
+        evaluacion.setSignosAlarmaDengue(EnumSet.allOf(SignoAlarmaDengue.class));
+        caso.getEvaluaciones().add(evaluacion);
+        for (ModalidadAtencion modalidad : ModalidadAtencion.values()) {
+            caso.getPlanes().add(new PlanAtencion(null, LocalDateTime.of(2026, 11, 12, 9, 0), modalidad, "x", null, "u"));
+        }
+        for (EvolucionCaso evolucion : EvolucionCaso.values()) {
+            caso.getSeguimientos().add(new Seguimiento(null, LocalDateTime.of(2026, 11, 12, 9, 0), evolucion, null, null, "u"));
+        }
+        for (TipoPrueba tipo : TipoPrueba.values()) {
+            caso.getResultados().add(new ResultadoLaboratorio(null, AgenteEtiologico.OROPOUCHE, tipo,
+                    TipoMuestra.SUERO, ResultadoPrueba.INDETERMINADO, LocalDate.of(2026, 11, 12), null));
+        }
+
+        adapter.save(caso);
+        jpaRepository.flush();
+
+        Caso leido = adapter.findById(caso.getId()).orElseThrow();
+        assertEquals(TipoEventoCaso.values().length, leido.getEventos().size());
+        assertEquals(TipoPrueba.values().length, leido.getResultados().size());
+    }
 }

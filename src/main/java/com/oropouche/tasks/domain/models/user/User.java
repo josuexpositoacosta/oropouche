@@ -1,4 +1,3 @@
-
 package com.oropouche.tasks.domain.models.user;
 
 import lombok.AllArgsConstructor;
@@ -19,4 +18,8 @@ public class User {
     private String country;
     private String password;
     private Role role;
+    /** Área de salud del usuario. Obligatoria para MEDICO. */
+    private Long areaSaludId;
+    @Builder.Default
+    private boolean activo = true;
 }

@@ -2,5 +2,7 @@ package com.oropouche.tasks.domain.models.caso;
 
 public enum TipoEventoCaso {
     CIERRE,
-    REAPERTURA
+    REAPERTURA,
+    /** El epidemiólogo valida la clasificación propuesta. */
+    VALIDACION_CLASIFICACION
 }

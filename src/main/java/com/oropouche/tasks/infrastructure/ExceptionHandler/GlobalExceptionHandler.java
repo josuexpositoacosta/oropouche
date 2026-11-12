@@ -10,6 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import com.oropouche.tasks.domain.exceptions.AccesoDenegadoException;
 import com.oropouche.tasks.domain.exceptions.InvalidCredentialsException;
 import com.oropouche.tasks.domain.exceptions.RecursoNoEncontradoException;
 import com.oropouche.tasks.domain.exceptions.RecursoDuplicadoException;
@@ -31,6 +32,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handlerRecursoNoEncontrado(RecursoNoEncontradoException ex)
     {
         return new ResponseEntity<String>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AccesoDenegadoException.class)
+    public ResponseEntity<String> handlerAccesoDenegado(AccesoDenegadoException ex)
+    {
+        return new ResponseEntity<String>(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)

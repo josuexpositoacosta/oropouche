@@ -32,6 +32,12 @@ public interface CasoUseCase {
     /** Añade un resultado de laboratorio. Recalcula la sugerencia sin cambiar la clasificación. */
     EvaluacionCaso registrarResultado(Long casoId, ResultadoLaboratorio resultado);
 
-    /** Cambia la clasificación. Motivo obligatorio; CONFIRMADO exige laboratorio confirmatorio. */
+    /**
+     * Cambia la clasificación. Motivo obligatorio; CONFIRMADO exige laboratorio confirmatorio.
+     * Si la cambia un epidemiólogo queda validada; si la cambia un médico, pendiente de validar.
+     */
     EvaluacionCaso cambiarClasificacion(Long casoId, Clasificacion nueva, String motivo);
+
+    /** El epidemiólogo valida la clasificación actual. */
+    EvaluacionCaso validarClasificacion(Long casoId, String observaciones);
 }

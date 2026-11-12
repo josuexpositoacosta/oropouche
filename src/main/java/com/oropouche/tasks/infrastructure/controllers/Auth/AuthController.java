@@ -7,12 +7,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.oropouche.tasks.domain.models.user.User;
 import com.oropouche.tasks.domain.ports.in.LoginUseCase;
-import com.oropouche.tasks.domain.ports.in.RegisterUserUseCase;
 
 /**
- * Adaptador de entrada REST para autenticación. Solo traduce HTTP ↔ casos de uso.
+ * Adaptador de entrada REST para autenticación. No hay registro público: los usuarios los
+ * crea el administrador en /api/v1/admin/usuarios.
  */
 @RestController
 @RequestMapping("/auth")
@@ -20,11 +19,9 @@ import com.oropouche.tasks.domain.ports.in.RegisterUserUseCase;
 public class AuthController {
 
     private final LoginUseCase loginUseCase;
-    private final RegisterUserUseCase registerUserUseCase;
 
-    public AuthController(LoginUseCase loginUseCase, RegisterUserUseCase registerUserUseCase) {
+    public AuthController(LoginUseCase loginUseCase) {
         this.loginUseCase = loginUseCase;
-        this.registerUserUseCase = registerUserUseCase;
     }
 
     @PostMapping(value = "login")
@@ -33,19 +30,5 @@ public class AuthController {
         String token = loginUseCase.login(request.getUsername(), request.getPassword());
 
         return ResponseEntity.ok(new AuthResponse(token));
-    }
-
-    @PostMapping(value = "register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-
-        User newUser = User.builder()
-                .username(request.getUsername())
-                .password(request.getPassword())
-                .firstname(request.getFirstname())
-                .lastname(request.getLastname())
-                .country(request.getCountry())
-                .build();
-
-        return ResponseEntity.ok(new AuthResponse(registerUserUseCase.register(newUser)));
     }
 }

@@ -41,6 +41,8 @@ public class Caso {
     private boolean nexoCasoConfirmado;
 
     private Clasificacion clasificacion;
+    /** true si la clasificación actual la puso o validó un epidemiólogo. */
+    private boolean clasificacionValidada;
     private EstadoCaso estado;
 
     private List<ResultadoLaboratorio> resultados = new ArrayList<>();

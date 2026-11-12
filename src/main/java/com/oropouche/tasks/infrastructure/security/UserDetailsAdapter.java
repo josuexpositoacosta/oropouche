@@ -1,26 +1,33 @@
 package com.oropouche.tasks.infrastructure.security;
 
-import com.oropouche.tasks.domain.models.user.User;
-
-import lombok.RequiredArgsConstructor;
+import java.util.Collection;
+import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
+import com.oropouche.tasks.domain.models.user.User;
 
-@RequiredArgsConstructor
+/**
+ * Adapta el usuario de dominio a Spring Security. La autoridad es el nombre del rol
+ * (ADMIN, MEDICO, EPIDEMIOLOGO). Un usuario desactivado no puede autenticarse.
+ */
 public class UserDetailsAdapter implements UserDetails {
 
     private final User user;
 
+    public UserDetailsAdapter(User user) {
+        this.user = user;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(
-                new SimpleGrantedAuthority(user.getRole().name())
-        );
+        return user.getRole() == null ? List.of() : List.of(new SimpleGrantedAuthority(user.getRole().name()));
     }
 
     @Override
@@ -50,6 +57,6 @@ public class UserDetailsAdapter implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.isActivo();
     }
 }

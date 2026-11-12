@@ -1,39 +1,50 @@
 package com.oropouche.tasks.infrastructure.adapters.user;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Repository;
+
+import com.oropouche.tasks.domain.models.user.Role;
 import com.oropouche.tasks.domain.models.user.User;
 import com.oropouche.tasks.domain.ports.out.UserRepositoryPort;
 import com.oropouche.tasks.infrastructure.entities.UserEntity;
 import com.oropouche.tasks.infrastructure.repositories.user.JpaUserRepository;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
-
 @Repository
-@RequiredArgsConstructor
 public class JpaUserRepositoryAdapter implements UserRepositoryPort {
 
     private final JpaUserRepository jpaUserRepository;
 
+    public JpaUserRepositoryAdapter(JpaUserRepository jpaUserRepository) {
+        this.jpaUserRepository = jpaUserRepository;
+    }
+
     @Override
     public Optional<User> findById(Integer id) {
-        return jpaUserRepository.findById(id)
-                .map(UserEntity::toDomainModel);
+        return jpaUserRepository.findById(id).map(UserEntity::toDomainModel);
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
-        return jpaUserRepository.findByUsername(username)
-                .map(UserEntity::toDomainModel);
+        return jpaUserRepository.findByUsername(username).map(UserEntity::toDomainModel);
     }
 
     @Override
     public User save(User user) {
-        UserEntity entity = UserEntity.fromDomainModel(user);
+        return jpaUserRepository.save(UserEntity.fromDomainModel(user)).toDomainModel();
+    }
 
-        UserEntity savedEntity = jpaUserRepository.save(entity);
+    @Override
+    public List<User> findAll() {
+        return jpaUserRepository.findAllByOrderByIdAsc().stream()
+                .map(UserEntity::toDomainModel)
+                .collect(Collectors.toList());
+    }
 
-        return savedEntity.toDomainModel();
+    @Override
+    public long countActivosByRole(Role role) {
+        return jpaUserRepository.countByRoleAndActivoTrue(role);
     }
 }

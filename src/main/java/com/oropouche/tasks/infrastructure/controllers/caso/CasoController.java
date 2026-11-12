@@ -25,6 +25,7 @@ import com.oropouche.tasks.domain.ports.in.CasoUseCase;
 import com.oropouche.tasks.infrastructure.controllers.caso.dto.CambioClasificacionRequest;
 import com.oropouche.tasks.infrastructure.controllers.caso.dto.CasoRequest;
 import com.oropouche.tasks.infrastructure.controllers.caso.dto.CasoResponse;
+import com.oropouche.tasks.infrastructure.controllers.caso.dto.MotivoRequest;
 import com.oropouche.tasks.infrastructure.controllers.caso.dto.ResultadoLaboratorioRequest;
 
 /**
@@ -89,6 +90,15 @@ public class CasoController {
 
         return ResponseEntity.ok(CasoResponse.from(
                 casoUseCase.cambiarClasificacion(id, request.getClasificacion(), request.getMotivo())));
+    }
+
+    /** El epidemiólogo valida la clasificación actual. Cuerpo opcional: {"motivo": "observaciones"}. */
+    @PatchMapping("/casos/{id}/clasificacion/validacion")
+    public ResponseEntity<CasoResponse> validarClasificacion(
+            @PathVariable Long id, @RequestBody(required = false) MotivoRequest request) {
+
+        return ResponseEntity.ok(CasoResponse.from(
+                casoUseCase.validarClasificacion(id, request == null ? null : request.getMotivo())));
     }
 
     private Caso toDomain(CasoRequest r) {

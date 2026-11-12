@@ -33,7 +33,7 @@ public class EventoCasoEntity {
     private LocalDateTime fecha;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 40)
     private TipoEventoCaso tipo;
 
     @Column(nullable = false, length = 2500)

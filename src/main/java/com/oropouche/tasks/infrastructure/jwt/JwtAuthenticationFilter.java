@@ -54,7 +54,8 @@ public class JwtAuthenticationFilter implements Filter {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                if (jwtService.isTokenValid(token, userDetails)) {
+                // Un usuario desactivado deja de tener acceso aunque su token no haya caducado
+                if (userDetails.isEnabled() && jwtService.isTokenValid(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,

@@ -13,9 +13,12 @@ import com.oropouche.tasks.domain.models.caso.Clasificacion;
 import com.oropouche.tasks.domain.models.caso.DefinicionCaso;
 import com.oropouche.tasks.domain.models.caso.EstadoCaso;
 import com.oropouche.tasks.domain.models.caso.EvaluacionCaso;
+import com.oropouche.tasks.domain.models.caso.EventoCaso;
 import com.oropouche.tasks.domain.models.caso.ResultadoClasificacion;
 import com.oropouche.tasks.domain.models.caso.ResultadoLaboratorio;
+import com.oropouche.tasks.domain.models.caso.TipoEventoCaso;
 import com.oropouche.tasks.domain.models.paciente.Paciente;
+import com.oropouche.tasks.domain.models.user.Role;
 import com.oropouche.tasks.domain.ports.in.CasoUseCase;
 import com.oropouche.tasks.domain.ports.out.CasoRepositoryPort;
 import com.oropouche.tasks.domain.ports.out.PacienteRepositoryPort;
@@ -103,6 +106,7 @@ public class CasoService implements CasoUseCase {
         }
 
         caso.setClasificacion(inicial);
+        caso.setClasificacionValidada(actuaEpidemiologo());
         caso.getHistorial().add(cambio(null, inicial, motivoInicial));
 
         return soporte.guardarYEvaluar(caso);
@@ -186,8 +190,31 @@ public class CasoService implements CasoUseCase {
 
         caso.getHistorial().add(cambio(caso.getClasificacion(), nueva, motivo.trim()));
         caso.setClasificacion(nueva);
+        caso.setClasificacionValidada(actuaEpidemiologo());
 
         return soporte.guardarYEvaluar(caso);
+    }
+
+    @Override
+    public EvaluacionCaso validarClasificacion(Long casoId, String observaciones) {
+
+        Caso caso = soporte.obtener(casoId);
+
+        if (caso.isClasificacionValidada()) {
+            throw new IllegalArgumentException("La clasificación " + caso.getClasificacion() + " ya está validada");
+        }
+
+        caso.setClasificacionValidada(true);
+        caso.getEventos().add(new EventoCaso(null, soporte.ahora(), TipoEventoCaso.VALIDACION_CLASIFICACION,
+                "Clasificación " + caso.getClasificacion() + " validada"
+                        + (esBlanco(observaciones) ? "" : ". " + observaciones.trim()),
+                usuarioActualPort.username()));
+
+        return soporte.guardarYEvaluar(caso);
+    }
+
+    private boolean actuaEpidemiologo() {
+        return usuarioActualPort.actual().map(u -> u.es(Role.EPIDEMIOLOGO)).orElse(false);
     }
 
     private CambioClasificacion cambio(Clasificacion anterior, Clasificacion nueva, String motivo) {

@@ -1,9 +1,10 @@
-
 package com.oropouche.tasks.domain.ports.out;
 
-import com.oropouche.tasks.domain.models.user.User;
-
+import java.util.List;
 import java.util.Optional;
+
+import com.oropouche.tasks.domain.models.user.Role;
+import com.oropouche.tasks.domain.models.user.User;
 
 public interface UserRepositoryPort {
 
@@ -12,4 +13,8 @@ public interface UserRepositoryPort {
     Optional<User> findByUsername(String username);
 
     User save(User user);
+
+    List<User> findAll();
+
+    long countActivosByRole(Role role);
 }

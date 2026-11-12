@@ -2,6 +2,7 @@ package com.oropouche.tasks.infrastructure.controllers.user;
 
 import com.oropouche.tasks.domain.models.user.User;
 import com.oropouche.tasks.domain.ports.in.GetUserUseCase;
+import com.oropouche.tasks.domain.ports.in.PerfilActualUseCase;
 import com.oropouche.tasks.domain.ports.in.UpdateUserUseCase;
 import com.oropouche.tasks.infrastructure.controllers.user.dto.UserDTO;
 import com.oropouche.tasks.infrastructure.controllers.user.dto.UserRequest;
@@ -26,10 +27,19 @@ public class UserController {
 
     private final GetUserUseCase getUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
+    private final PerfilActualUseCase perfilActualUseCase;
 
-    public UserController(GetUserUseCase getUserUseCase, UpdateUserUseCase updateUserUseCase) {
+    public UserController(GetUserUseCase getUserUseCase, UpdateUserUseCase updateUserUseCase,
+                          PerfilActualUseCase perfilActualUseCase) {
         this.getUserUseCase = getUserUseCase;
         this.updateUserUseCase = updateUserUseCase;
+        this.perfilActualUseCase = perfilActualUseCase;
+    }
+
+    /** Perfil del usuario autenticado: id, nombre, rol y área. Lo usa el frontend tras el login. */
+    @GetMapping(value = "me")
+    public ResponseEntity<UserDTO> perfilActual() {
+        return ResponseEntity.ok(toDTO(perfilActualUseCase.perfilActual()));
     }
 
     @GetMapping(value = "{id}")
@@ -59,6 +69,8 @@ public class UserController {
                 .firstname(user.getFirstname())
                 .lastname(user.getLastname())
                 .country(user.getCountry())
+                .role(user.getRole())
+                .areaSaludId(user.getAreaSaludId())
                 .build();
     }
 

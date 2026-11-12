@@ -51,7 +51,7 @@ class UserUseCasesTest {
     void updateUserShouldChangeOnlyPersonalData() {
 
         User existing = User.builder()
-                .id(1).username("ana").password("$hash$").role(Role.USER)
+                .id(1).username("ana").password("$hash$").role(Role.MEDICO)
                 .firstname("Ana").lastname("Old").country("CU")
                 .build();
         when(userRepositoryPort.findById(1)).thenReturn(Optional.of(existing));
@@ -69,7 +69,7 @@ class UserUseCasesTest {
         assertEquals("ES", result.getCountry());
         assertEquals("ana", result.getUsername(), "no debe cambiar el usuario");
         assertEquals("$hash$", result.getPassword(), "no debe cambiar la contraseña");
-        assertEquals(Role.USER, result.getRole(), "no debe cambiar el rol");
+        assertEquals(Role.MEDICO, result.getRole(), "no debe cambiar el rol");
     }
 
     @Test

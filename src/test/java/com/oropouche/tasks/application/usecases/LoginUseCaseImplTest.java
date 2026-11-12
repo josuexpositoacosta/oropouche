@@ -40,7 +40,7 @@ class LoginUseCaseImplTest {
     @Test
     void shouldReturnTokenWhenCredentialsAreValid() {
 
-        User user = User.builder().id(1).username("ana").role(Role.USER).build();
+        User user = User.builder().id(1).username("ana").role(Role.MEDICO).build();
         when(userRepositoryPort.findByUsername("ana")).thenReturn(Optional.of(user));
         when(tokenProviderPort.generateToken(user)).thenReturn("token-123");
 

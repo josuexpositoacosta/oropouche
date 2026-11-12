@@ -48,6 +48,7 @@ public class CasoResponse {
     private String detalleAreaTransmision;
     private boolean nexoCasoConfirmado;
     private Clasificacion clasificacion;
+    private boolean clasificacionValidada;
     private EstadoCaso estado;
     private Sugerencia sugerencia;
     private List<AlertaDto> alertas;
@@ -190,6 +191,7 @@ public class CasoResponse {
         r.setDetalleAreaTransmision(c.getDetalleAreaTransmision());
         r.setNexoCasoConfirmado(c.isNexoCasoConfirmado());
         r.setClasificacion(c.getClasificacion());
+        r.setClasificacionValidada(c.isClasificacionValidada());
         r.setEstado(c.getEstado());
         r.setSugerencia(new Sugerencia(sugerida, sugerida == c.getClasificacion(), evaluacion.sugerencia().criterios()));
         r.setAlertas(mapear(evaluacion.alertas(), a -> new AlertaDto(a.tipo(), a.mensaje())));

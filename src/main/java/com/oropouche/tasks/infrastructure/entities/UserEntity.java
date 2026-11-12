@@ -43,7 +43,14 @@ public class UserEntity {
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private Role role;
+
+    @Column(name = "area_salud_id")
+    private Long areaSaludId;
+
+    @Column(nullable = false)
+    private boolean activo;
 
     public User toDomainModel() {
         return User.builder()
@@ -54,6 +61,8 @@ public class UserEntity {
                 .country(country)
                 .password(password)
                 .role(role)
+                .areaSaludId(areaSaludId)
+                .activo(activo)
                 .build();
     }
 
@@ -66,6 +75,8 @@ public class UserEntity {
                 .country(user.getCountry())
                 .password(user.getPassword())
                 .role(user.getRole())
+                .areaSaludId(user.getAreaSaludId())
+                .activo(user.isActivo())
                 .build();
     }
 }

@@ -25,8 +25,11 @@ import com.oropouche.tasks.domain.models.caso.Manifestacion;
 import com.oropouche.tasks.domain.models.caso.ResultadoLaboratorio;
 import com.oropouche.tasks.domain.models.caso.ResultadoPrueba;
 import com.oropouche.tasks.domain.models.caso.TipoMuestra;
+import com.oropouche.tasks.domain.models.caso.TipoEventoCaso;
 import com.oropouche.tasks.domain.models.caso.TipoPrueba;
 import com.oropouche.tasks.domain.models.paciente.Paciente;
+import com.oropouche.tasks.domain.models.user.Role;
+import com.oropouche.tasks.domain.models.user.UsuarioActual;
 import com.oropouche.tasks.domain.ports.out.CasoRepositoryPort;
 import com.oropouche.tasks.domain.ports.out.PacienteRepositoryPort;
 import com.oropouche.tasks.domain.ports.out.UsuarioActualPort;
@@ -365,5 +368,42 @@ class CasoServiceTest {
         assertEquals(Clasificacion.SOSPECHOSO, r.caso().getClasificacion());
         assertEquals(Optional.of(Clasificacion.PROBABLE), r.sugerencia().sugerida());
         assertTrue(r.caso().isNexoCasoConfirmado());
+    }
+
+    // --- Validación por epidemiología
+
+    @Test
+    void cambioDeUnMedicoQuedaPendienteYElDelEpidemiologoValidado() {
+
+        Caso caso = casoGuardado(Clasificacion.SOSPECHOSO, EstadoCaso.ABIERTO);
+        caso.setClasificacionValidada(true);
+        when(casoRepository.findById(1L)).thenReturn(Optional.of(caso));
+        guardarDevuelveLoMismo();
+
+        when(usuarioActual.actual()).thenReturn(Optional.of(new UsuarioActual(1, "dr", Role.MEDICO, 3L)));
+        assertFalse(service.cambiarClasificacion(1L, Clasificacion.DESCARTADO, "Dengue confirmado")
+                .caso().isClasificacionValidada(), "lo que propone el médico queda pendiente de validar");
+
+        when(usuarioActual.actual()).thenReturn(Optional.of(new UsuarioActual(2, "epi", Role.EPIDEMIOLOGO, null)));
+        assertTrue(service.cambiarClasificacion(1L, Clasificacion.SOSPECHOSO, "Revisión epidemiológica")
+                .caso().isClasificacionValidada());
+    }
+
+    @Test
+    void validarRegistraEventoYNoSeRepite() {
+
+        Caso caso = casoGuardado(Clasificacion.PROBABLE, EstadoCaso.CERRADO);
+        when(casoRepository.findById(1L)).thenReturn(Optional.of(caso));
+        when(usuarioActual.username()).thenReturn("epi.gomez");
+        guardarDevuelveLoMismo();
+
+        EvaluacionCaso r = service.validarClasificacion(1L, "Nexo confirmado");
+
+        assertTrue(r.caso().isClasificacionValidada(), "se puede validar aunque el caso esté cerrado");
+        assertEquals(TipoEventoCaso.VALIDACION_CLASIFICACION, r.caso().getEventos().get(0).getTipo());
+        assertTrue(r.caso().getEventos().get(0).getDetalle().contains("PROBABLE validada. Nexo confirmado"));
+        assertEquals("epi.gomez", r.caso().getEventos().get(0).getUsuario());
+
+        assertThrows(IllegalArgumentException.class, () -> service.validarClasificacion(1L, null));
     }
 }

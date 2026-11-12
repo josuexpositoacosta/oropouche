@@ -76,8 +76,9 @@ flowchart TB
 
 | Module | Endpoints | Notes |
 |---|---|---|
-| Authentication | `POST /auth/register`, `POST /auth/login` | Public. Returns a JWT. Public registration always assigns the `USER` role. |
-| Users | `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Only personal data can be updated (not username, password, or role). |
+| Authentication | `POST /auth/login` | Public. Returns a JWT. There is no public registration: users are created by the administrator. |
+| Users | `GET /api/v1/user/me`, `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Each user can only read and update their own personal data. |
+| User administration | `/api/v1/admin/usuarios` | ADMIN only: create users, assign role and healthcare area, activate or deactivate, reset passwords. See [docs/roles-y-acceso.md](docs/roles-y-acceso.md). |
 | Healthcare areas | `/api/v1/areas-salud` | Create, list (all / active), find by id or code, update, deactivate. |
 | Patients | `/api/v1/pacientes` | Register, list (all / by area), find, update, deactivate. |
 | Oropouche cases | `/api/v1/casos` | Register cases, laboratory results, and classification history. The system suggests the classification using PAHO case definitions; the professional decides. See [docs/modulo-casos.md](docs/modulo-casos.md). |
@@ -88,9 +89,10 @@ Business rules: a patient can only be assigned to a healthcare area that exists 
 ### Security
 
 - Every endpoint except `/auth/**` requires a JWT (`Authorization: Bearer <token>`).
+- Roles: `ADMIN` (users, healthcare areas, catalogs; no clinical data), `MEDICO` (patients, cases, and clinical care in their own healthcare area only), `EPIDEMIOLOGO` (all areas, validates classifications). The physician proposes the classification and the epidemiologist validates it.
 - Missing, malformed, expired, or invalid tokens receive `401 Unauthorized`.
 - Tokens are valid for 24 hours (configurable).
-- Error responses do not expose internal details: `400` invalid data, `401` not authenticated, `404` not found, `409` duplicate.
+- Error responses do not expose internal details: `400` invalid data, `401` not authenticated, `403` not allowed for the role or healthcare area, `404` not found, `409` duplicate.
 
 ### Configuration and running locally
 
@@ -98,7 +100,7 @@ Secrets are not stored in the repository. They are provided through environment 
 
 ```bash
 cp application-local.properties.example application-local.properties
-# fill in DB_PASSWORD and JWT_SECRET (generate with: openssl rand -base64 32)
+# fill in DB_PASSWORD, JWT_SECRET (generate with: openssl rand -base64 32) and ADMIN_PASSWORD
 ./mvnw spring-boot:run
 ```
 
@@ -108,6 +110,7 @@ cp application-local.properties.example application-local.properties
 | `DB_USERNAME` / `DB_PASSWORD` | `root` / *(empty)* | MySQL credentials |
 | `JWT_SECRET` | *(required)* | Base64 HMAC key, at least 256 bits |
 | `JWT_EXPIRATION_MS` | `86400000` | Token validity (24 h) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | *(empty)* | First administrator, created at startup if there is no active ADMIN (password of at least 8 characters) |
 
 ### Technology stack
 
@@ -123,7 +126,7 @@ cp application-local.properties.example application-local.properties
 
 The project includes automated tests for use cases, application services, persistence adapters, REST controllers, and security rules (integration tests with H2).
 
-Latest recorded validation: **130 tests executed, with no failures or errors.**
+Latest recorded validation: **149 tests executed, with no failures or errors.**
 
 ### Project status
 
@@ -213,8 +216,9 @@ flowchart TB
 
 | Módulo | Endpoints | Notas |
 |---|---|---|
-| Autenticación | `POST /auth/register`, `POST /auth/login` | Públicos. Devuelven un JWT. El registro público siempre asigna el rol `USER`. |
-| Usuarios | `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Solo se actualizan los datos personales (no el usuario, la contraseña ni el rol). |
+| Autenticación | `POST /auth/login` | Público. Devuelve un JWT. No hay registro público: los usuarios los crea el administrador. |
+| Usuarios | `GET /api/v1/user/me`, `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Cada usuario solo consulta y modifica sus propios datos personales. |
+| Administración de usuarios | `/api/v1/admin/usuarios` | Solo ADMIN: crear usuarios, asignar rol y área de salud, activar o desactivar y restablecer contraseñas. Ver [docs/roles-y-acceso.md](docs/roles-y-acceso.md). |
 | Áreas de salud | `/api/v1/areas-salud` | Crear, listar (todas / activas), buscar por id o código, actualizar, desactivar. |
 | Pacientes | `/api/v1/pacientes` | Registrar, listar (todos / por área), buscar, actualizar, desactivar. |
 | Casos de Oropouche | `/api/v1/casos` | Registro de casos, resultados de laboratorio e historial de clasificación. El sistema sugiere la clasificación según las definiciones de caso de la OPS; decide el profesional. Ver [docs/modulo-casos.md](docs/modulo-casos.md). |
@@ -225,9 +229,10 @@ Reglas de negocio: un paciente solo puede asignarse a un área de salud existent
 ### Seguridad
 
 - Todos los endpoints excepto `/auth/**` requieren un JWT (`Authorization: Bearer <token>`).
+- Roles: `ADMIN` (usuarios, áreas de salud y catálogos; sin acceso a datos clínicos), `MEDICO` (pacientes, casos y atención clínica solo de su área de salud), `EPIDEMIOLOGO` (todas las áreas; valida clasificaciones). El médico propone la clasificación y el epidemiólogo la valida.
 - Sin token, o con un token mal formado, caducado o inválido, se responde `401 Unauthorized`.
 - Los tokens son válidos durante 24 horas (configurable).
-- Las respuestas de error no exponen detalles internos: `400` datos inválidos, `401` no autenticado, `404` no encontrado, `409` duplicado.
+- Las respuestas de error no exponen detalles internos: `400` datos inválidos, `401` no autenticado, `403` sin permiso por rol o área de salud, `404` no encontrado, `409` duplicado.
 
 ### Configuración y ejecución local
 
@@ -235,7 +240,7 @@ Los secretos no se guardan en el repositorio. Se proporcionan mediante variables
 
 ```bash
 cp application-local.properties.example application-local.properties
-# rellenar DB_PASSWORD y JWT_SECRET (generar con: openssl rand -base64 32)
+# rellenar DB_PASSWORD, JWT_SECRET (generar con: openssl rand -base64 32) y ADMIN_PASSWORD
 ./mvnw spring-boot:run
 ```
 
@@ -245,6 +250,7 @@ cp application-local.properties.example application-local.properties
 | `DB_USERNAME` / `DB_PASSWORD` | `root` / *(vacío)* | Credenciales de MySQL |
 | `JWT_SECRET` | *(obligatoria)* | Clave HMAC en Base64, mínimo 256 bits |
 | `JWT_EXPIRATION_MS` | `86400000` | Validez del token (24 h) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | *(vacío)* | Primer administrador, se crea al arrancar si no hay ningún ADMIN activo (contraseña de al menos 8 caracteres) |
 
 ### Tecnologías
 
@@ -260,7 +266,7 @@ cp application-local.properties.example application-local.properties
 
 El proyecto dispone de pruebas automatizadas para casos de uso, servicios de aplicación, adaptadores de persistencia, controladores REST y reglas de seguridad (pruebas de integración con H2).
 
-Última validación registrada: **130 pruebas ejecutadas, sin fallos ni errores.**
+Última validación registrada: **149 pruebas ejecutadas, sin fallos ni errores.**
 
 ### Estado del proyecto
 
