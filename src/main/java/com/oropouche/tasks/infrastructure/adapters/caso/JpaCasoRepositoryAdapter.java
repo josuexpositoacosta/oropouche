@@ -1,5 +1,6 @@
 package com.oropouche.tasks.infrastructure.adapters.caso;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.oropouche.tasks.domain.models.caso.Caso;
 import com.oropouche.tasks.domain.models.caso.Clasificacion;
 import com.oropouche.tasks.domain.models.caso.EstadoCaso;
+import com.oropouche.tasks.domain.models.vigilancia.CriterioFecha;
 import com.oropouche.tasks.domain.ports.out.CasoRepositoryPort;
 import com.oropouche.tasks.infrastructure.entities.caso.CasoEntity;
 import com.oropouche.tasks.infrastructure.repositories.caso.JpaCasoRepository;
@@ -53,6 +55,15 @@ public class JpaCasoRepositoryAdapter implements CasoRepositoryPort {
         return repository.findByPacienteIdOrderByFechaNotificacionDesc(pacienteId).stream()
                 .map(CasoEntity::toDomainModel)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Caso> findEntreFechas(Long areaSaludId, LocalDate desde, LocalDate hasta, CriterioFecha criterio) {
+        List<CasoEntity> entidades = criterio == CriterioFecha.NOTIFICACION
+                ? repository.buscarPorNotificacion(areaSaludId, desde, hasta)
+                : repository.buscarPorInicioSintomas(areaSaludId, desde, hasta);
+        return entidades.stream().map(CasoEntity::toDomainModel).collect(Collectors.toList());
     }
 
     @Override

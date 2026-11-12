@@ -78,6 +78,7 @@ flowchart TB
 |---|---|---|
 | Authentication | `POST /auth/login` | Public. Returns a JWT. There is no public registration: users are created by the administrator. |
 | Users | `GET /api/v1/user/me`, `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Each user can only read and update their own personal data. |
+| Epidemiological surveillance | `/api/v1/estadisticas/…` | EPIDEMIOLOGO only: summary indicators, epidemic curve by epidemiological week, cases by healthcare area, and CSV export without personal data. See [docs/vigilancia.md](docs/vigilancia.md). |
 | User administration | `/api/v1/admin/usuarios` | ADMIN only: create users, assign role and healthcare area, activate or deactivate, reset passwords. See [docs/roles-y-acceso.md](docs/roles-y-acceso.md). |
 | Healthcare areas | `/api/v1/areas-salud` | Create, list (all / active), find by id or code, update, deactivate. |
 | Patients | `/api/v1/pacientes` | Register, list (all / by area), find, update, deactivate. |
@@ -126,7 +127,7 @@ cp application-local.properties.example application-local.properties
 
 The project includes automated tests for use cases, application services, persistence adapters, REST controllers, and security rules (integration tests with H2).
 
-Latest recorded validation: **149 tests executed, with no failures or errors.**
+Latest recorded validation: **164 tests executed, with no failures or errors.**
 
 ### Project status
 
@@ -218,6 +219,7 @@ flowchart TB
 |---|---|---|
 | Autenticación | `POST /auth/login` | Público. Devuelve un JWT. No hay registro público: los usuarios los crea el administrador. |
 | Usuarios | `GET /api/v1/user/me`, `GET /api/v1/user/{id}`, `PUT /api/v1/user` | Cada usuario solo consulta y modifica sus propios datos personales. |
+| Vigilancia epidemiológica | `/api/v1/estadisticas/…` | Solo EPIDEMIOLOGO: indicadores, curva epidémica por semana epidemiológica, casos por área de salud y exportación CSV sin datos personales. Ver [docs/vigilancia.md](docs/vigilancia.md). |
 | Administración de usuarios | `/api/v1/admin/usuarios` | Solo ADMIN: crear usuarios, asignar rol y área de salud, activar o desactivar y restablecer contraseñas. Ver [docs/roles-y-acceso.md](docs/roles-y-acceso.md). |
 | Áreas de salud | `/api/v1/areas-salud` | Crear, listar (todas / activas), buscar por id o código, actualizar, desactivar. |
 | Pacientes | `/api/v1/pacientes` | Registrar, listar (todos / por área), buscar, actualizar, desactivar. |
@@ -266,7 +268,7 @@ cp application-local.properties.example application-local.properties
 
 El proyecto dispone de pruebas automatizadas para casos de uso, servicios de aplicación, adaptadores de persistencia, controladores REST y reglas de seguridad (pruebas de integración con H2).
 
-Última validación registrada: **149 pruebas ejecutadas, sin fallos ni errores.**
+Última validación registrada: **164 pruebas ejecutadas, sin fallos ni errores.**
 
 ### Estado del proyecto
 

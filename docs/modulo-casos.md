@@ -145,4 +145,4 @@ infrastructure/          CasoEntity (+ resultados e historial en cascada), JpaCa
 - Atención clínica, seguimiento y cierre: implementado, ver [modulo-clinico.md](modulo-clinico.md).
 - Roles y visibilidad por área: implementado, ver [roles-y-acceso.md](roles-y-acceso.md).
 - Pendiente: transmisión vertical.
-- Pendiente: estadísticas de vigilancia.
+- Estadísticas de vigilancia: implementado, ver [vigilancia.md](vigilancia.md).

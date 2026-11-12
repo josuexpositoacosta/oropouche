@@ -32,6 +32,7 @@ import com.oropouche.tasks.domain.models.caso.ResultadoLaboratorio;
 import com.oropouche.tasks.domain.models.caso.ResultadoPrueba;
 import com.oropouche.tasks.domain.models.caso.TipoMuestra;
 import com.oropouche.tasks.domain.models.caso.TipoPrueba;
+import com.oropouche.tasks.domain.models.vigilancia.CriterioFecha;
 import com.oropouche.tasks.infrastructure.repositories.caso.JpaCasoRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -210,5 +211,25 @@ class JpaCasoRepositoryAdapterTest {
         Caso leido = adapter.findById(caso.getId()).orElseThrow();
         assertEquals(TipoEventoCaso.values().length, leido.getEventos().size());
         assertEquals(TipoPrueba.values().length, leido.getResultados().size());
+    }
+
+    @Test
+    void debeBuscarPorRangoDeFechasSegunElCriterio() {
+
+        Caso c1 = caso(1L, 10L, Clasificacion.SOSPECHOSO, EstadoCaso.ABIERTO);
+        c1.setFechaInicioSintomas(LocalDate.of(2026, 10, 30));
+        c1.setFechaNotificacion(LocalDate.of(2026, 11, 2));
+        adapter.save(c1);
+        Caso c2 = caso(2L, 20L, Clasificacion.SOSPECHOSO, EstadoCaso.ABIERTO);
+        c2.setFechaInicioSintomas(LocalDate.of(2026, 11, 3));
+        c2.setFechaNotificacion(LocalDate.of(2026, 11, 3));
+        adapter.save(c2);
+
+        LocalDate desde = LocalDate.of(2026, 11, 1);
+        LocalDate hasta = LocalDate.of(2026, 11, 7);
+
+        assertEquals(1, adapter.findEntreFechas(null, desde, hasta, CriterioFecha.INICIO_SINTOMAS).size());
+        assertEquals(2, adapter.findEntreFechas(null, desde, hasta, CriterioFecha.NOTIFICACION).size());
+        assertEquals(1, adapter.findEntreFechas(10L, desde, hasta, CriterioFecha.NOTIFICACION).size());
     }
 }

@@ -1,5 +1,6 @@
 package com.oropouche.tasks.infrastructure.repositories.caso;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,4 +26,22 @@ public interface JpaCasoRepository extends JpaRepository<CasoEntity, Long> {
     List<CasoEntity> findByPacienteIdOrderByFechaNotificacionDesc(Long pacienteId);
 
     boolean existsByPacienteIdAndEstado(Long pacienteId, EstadoCaso estado);
+
+    @Query("select c from CasoEntity c"
+            + " where c.fechaInicioSintomas between :desde and :hasta"
+            + " and (:areaSaludId is null or c.areaSaludId = :areaSaludId)"
+            + " order by c.fechaInicioSintomas, c.id")
+    List<CasoEntity> buscarPorInicioSintomas(
+            @Param("areaSaludId") Long areaSaludId,
+            @Param("desde") LocalDate desde,
+            @Param("hasta") LocalDate hasta);
+
+    @Query("select c from CasoEntity c"
+            + " where c.fechaNotificacion between :desde and :hasta"
+            + " and (:areaSaludId is null or c.areaSaludId = :areaSaludId)"
+            + " order by c.fechaNotificacion, c.id")
+    List<CasoEntity> buscarPorNotificacion(
+            @Param("areaSaludId") Long areaSaludId,
+            @Param("desde") LocalDate desde,
+            @Param("hasta") LocalDate hasta);
 }

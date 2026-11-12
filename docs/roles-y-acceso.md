@@ -8,7 +8,7 @@ Roles aprobados el 2026-11-12. Fase 4 del backend.
 |---|---|---|
 | `ADMIN` | Crear usuarios, asignar roles y áreas, activar o desactivar usuarios, restablecer contraseñas, gestionar áreas de salud y el catálogo de desenlaces | Ver o modificar datos clínicos (pacientes, casos, atención) |
 | `MEDICO` | Registrar pacientes y casos, resultados de laboratorio, evaluaciones clínicas y signos vitales, dictámenes, planes de atención, seguimientos, cierre y reapertura; proponer la clasificación | Acceder a otras áreas de salud; validar clasificaciones; administrar |
-| `EPIDEMIOLOGO` | Ver pacientes y casos de **todas** las áreas, reclasificar y **validar** clasificaciones (y, en la siguiente fase, estadísticas) | Registrar atención clínica o pacientes; administrar |
+| `EPIDEMIOLOGO` | Ver pacientes y casos de **todas** las áreas, reclasificar y **validar** clasificaciones, y consultar las estadísticas de vigilancia | Registrar atención clínica o pacientes; administrar |
 
 Cualquier usuario autenticado puede leer las áreas de salud y el catálogo de desenlaces, y
 consultar o modificar **sus propios** datos personales (`/api/v1/user/me`, `/api/v1/user/{suId}`).

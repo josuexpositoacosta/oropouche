@@ -21,6 +21,9 @@ import com.oropouche.tasks.application.services.acceso.CasoUseCaseConAcceso;
 import com.oropouche.tasks.application.services.acceso.PacienteUseCaseConAcceso;
 import com.oropouche.tasks.application.services.acceso.PoliticaAcceso;
 import com.oropouche.tasks.application.services.acceso.UsuarioPropioConAcceso;
+import com.oropouche.tasks.application.services.acceso.VigilanciaUseCaseConAcceso;
+import com.oropouche.tasks.application.services.vigilancia.VigilanciaService;
+import com.oropouche.tasks.domain.ports.in.VigilanciaUseCase;
 import com.oropouche.tasks.application.services.area_salud.AreaSaludService;
 import com.oropouche.tasks.application.services.user.GestionUsuariosService;
 import com.oropouche.tasks.domain.ports.in.GestionUsuariosUseCase;
@@ -130,6 +133,19 @@ public class ApplicationConfig {
     public DesenlaceUseCase desenlaceUseCase(DesenlaceRepositoryPort desenlaceRepositoryPort) {
 
         return new DesenlaceService(desenlaceRepositoryPort);
+    }
+
+    // Vigilancia epidemiológica
+
+    @Bean
+    public VigilanciaUseCase vigilanciaUseCase(
+            CasoRepositoryPort casoRepositoryPort,
+            AreaSaludRepositoryPort areaSaludRepositoryPort,
+            Clock clock,
+            PoliticaAcceso politicaAcceso) {
+
+        return new VigilanciaUseCaseConAcceso(
+                new VigilanciaService(casoRepositoryPort, areaSaludRepositoryPort, clock), politicaAcceso);
     }
 
     // Autenticación y usuarios

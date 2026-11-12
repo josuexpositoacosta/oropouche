@@ -53,6 +53,8 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.GET, "/api/v1/pacientes/**", "/api/v1/casos/**")
                     .hasAnyAuthority(MEDICO, EPIDEMIOLOGO)
                 .antMatchers("/api/v1/pacientes/**", "/api/v1/casos/**").hasAuthority(MEDICO)
+                // Estadísticas de vigilancia
+                .antMatchers("/api/v1/estadisticas/**").hasAuthority(EPIDEMIOLOGO)
                 // Datos personales propios (la regla "solo los suyos" está en la capa de aplicación)
                 .antMatchers("/api/v1/user/**").authenticated()
                 .anyRequest().denyAll())

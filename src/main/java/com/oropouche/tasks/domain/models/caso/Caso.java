@@ -131,6 +131,22 @@ public class Caso {
         return ChronoUnit.DAYS.between(fechaInicioSintomas, fechaNotificacion);
     }
 
+    /** Manifestación neurológica en el caso o signos neurológicos en alguna evaluación. */
+    public boolean esNeuroinvasivo() {
+        return manifestaciones.contains(Manifestacion.NEUROLOGICA)
+                || evaluaciones.stream().anyMatch(e -> e.getSignosClinicos().stream()
+                        .anyMatch(SignoClinico.NEUROLOGICOS::contains));
+    }
+
+    /** Algún plan de atención con ingreso (hospitalario o en unidad especializada). */
+    public boolean fueHospitalizado() {
+        return planes.stream().anyMatch(p -> p.getModalidad() != ModalidadAtencion.AMBULATORIO);
+    }
+
+    public boolean tieneLaboratorioDe(AgenteEtiologico agente) {
+        return resultados.stream().anyMatch(r -> r.getAgente() == agente);
+    }
+
     public boolean estaAbierto() {
         return estado == EstadoCaso.ABIERTO;
     }

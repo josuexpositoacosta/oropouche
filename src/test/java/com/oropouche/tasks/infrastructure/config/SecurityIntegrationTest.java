@@ -237,4 +237,31 @@ class SecurityIntegrationTest {
         mockMvc.perform(get("/api/v1/user/" + otro.getId()).header("Authorization", token))
                 .andExpect(status().isForbidden());
     }
+
+    // --- Estadísticas
+
+    @Test
+    void estadisticasSoloParaElEpidemiologo() throws Exception {
+        String epi = token(crearUsuario(Role.EPIDEMIOLOGO, null));
+        String medico = token(crearUsuario(Role.MEDICO, areaA));
+        String admin = token(crearUsuario(Role.ADMIN, null));
+
+        mockMvc.perform(get("/api/v1/estadisticas/resumen").header("Authorization", epi))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.criterio").value("INICIO_SINTOMAS"))
+                .andExpect(jsonPath("$.porClasificacion.CONFIRMADO").exists());
+        mockMvc.perform(get("/api/v1/estadisticas/semanas").header("Authorization", epi))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(12));
+        mockMvc.perform(get("/api/v1/estadisticas/casos.csv").header("Authorization", epi))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", org.hamcrest.Matchers.startsWith("text/csv")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")));
+        mockMvc.perform(get("/api/v1/estadisticas/resumen").header("Authorization", medico))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/estadisticas/areas").header("Authorization", admin))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/estadisticas/resumen").param("criterio", "OTRO").header("Authorization", epi))
+                .andExpect(status().isBadRequest());
+    }
 }
